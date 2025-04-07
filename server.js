@@ -24,10 +24,11 @@ app.use(express.json({ limit: '10kb' }));
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 app.use(limiter);
 
-const DB = process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSWORD);
-mongoose.connect(DB)
-  .then(() => console.log('DB connection successful!'))
-  .catch((err) => console.error('DB connection error:', err));
+// conconnecting to MongoDB
+// const DB = process.env.DATABASE;
+// mongoose.connect(DB)
+//   .then(() => console.log('DB connection successful!'))
+//   .catch((err) => console.error('DB connection error:', err));
 
 // Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
