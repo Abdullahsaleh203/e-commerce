@@ -24,6 +24,8 @@ app.use(express.json({ limit: '10kb' }));
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 app.use(limiter);
 
+
+
 // conconnecting to MongoDB
 // const DB = process.env.DATABASE;
 // mongoose.connect(DB)
