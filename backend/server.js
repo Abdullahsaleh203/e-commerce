@@ -26,10 +26,10 @@ app.use(limiter);
 
 // conconnecting to MongoDB
 
-// const DB = process.env.DATABASE;
-// mongoose.connect(DB)
-//   .then(() => console.log('DB connection successful!'))
-//   .catch((err) => console.error('DB connection error:', err));
+const DB = process.env.DATABASE_URI;
+mongoose.connect(DB)
+  .then(() => console.log('DB connection successful!'))
+  .catch((err) => console.error('DB connection error:', err));
 
 // Data sanitization against NoSQL query injection
 app.use(mongoSanitize());
