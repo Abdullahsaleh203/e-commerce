@@ -1,21 +1,21 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const cors = require('cors');
-const morgan = require('morgan');
-const helmet = require('helmet');
-const mongoose = require('mongoose');
-const rateLimit = require('express-rate-limit');
-const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss-clean');
-const PORT = process.env.PORT || 3000;
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import morgan from 'morgan';
+import helmet from 'helmet';
+import mongoose from 'mongoose';
+import rateLimit from 'express-rate-limit';
+import mongoSanitize from 'express-mongo-sanitize';
+import xss from 'xss-clean';
 dotenv.config();
 
+const PORT = process.env.PORT || 3000;
 const app = express();
 
 // Set security HTTP headers
 
 if (process.env.NODE_ENV === 'development') {
-    app.use(morgan('dev'));
+  app.use(morgan('dev'));
 }
 
 // Body parser, reading data from body into req.body
@@ -24,8 +24,14 @@ app.use(express.json({ limit: '10kb' }));
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 app.use(limiter);
 
-// conconnecting to MongoDB
-
+// connecting to MongoDB
+// Middleware to log requests
+app.use(morgan('dev'));
+app.use(helmet());
+/// mongoSanitize() is a middleware that helps prevent NoSQL injection attacks by sanitizing user input
+app.use(mongoSanitize());
+// Enable CORS for all routes to allow cross-origin requests 
+app.use(cors());
 const DB = process.env.DATABASE_URI;
 mongoose.connect(DB)
   .then(() => console.log('DB connection successful!'))
@@ -43,4 +49,3 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
-
