@@ -1,4 +1,7 @@
-const express = require('express');
+// const express = require('express');
+import express from 'express';
+import User from '../models/userModel.js';
+import jwt from 'jsonwebtoken';
 const router = express.Router();
 
 router.post('/register', async (req, res) => {

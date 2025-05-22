@@ -7,10 +7,11 @@ import mongoose from 'mongoose';
 import rateLimit from 'express-rate-limit';
 import mongoSanitize from 'express-mongo-sanitize';
 import xss from 'xss-clean';
+
+const app = express();
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
-const app = express();
 
 // Set security HTTP headers
 
@@ -32,9 +33,11 @@ app.use(helmet());
 app.use(mongoSanitize());
 // Enable CORS for all routes to allow cross-origin requests 
 app.use(cors());
+
+// Connect to MongoDB
 const DB = process.env.DATABASE_URI;
 mongoose.connect(DB)
-  .then(() => console.log('DB connection successful!'))
+  .then(() => console.log('DB connection successful! 🚀 '))
   .catch((err) => console.error('DB connection error:', err));
 
 // Data sanitization against NoSQL query injection
@@ -47,5 +50,5 @@ app.get('/', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT} 🌐 `);
 });
