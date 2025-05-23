@@ -1,17 +1,19 @@
 import express from 'express';
-// import { signup, login, logout, protect, restrictTo } from '../controllers/authController.js';
 import { signup, login } from '../controllers/authController.js';
+import { protect, restrictTo, refreshToken, logout } from '../controllers/auth.js';
 
 const router = express.Router();
 
+// Public routes
 router.post('/signup', signup);
 router.post('/login', login);
-// router.get('/logout', logout);
+router.post('/refresh-token', refreshToken);
+router.get('/logout', logout);
 
 // Protected routes
-// router.use(protect);
+router.use(protect);
 
 // Admin only routes
-// router.use(restrictTo('admin'));
+router.use('/admin', restrictTo('admin'));
 
 export default router;
