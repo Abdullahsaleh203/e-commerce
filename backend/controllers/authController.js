@@ -102,7 +102,20 @@ export const logout = asyncHandler(async (req, res, next) => {
     if (refreshToken) {
         const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET );
         await redis.del(`refreshToken: ${decoded.userId}`);
-        
     }
+    // Clear cookies
+    res.cookie('accessToken', '', {
+        expires: new Date(0),
+        httpOnly: true
+    });
+    res.cookie('refreshToken', '', {
+        expires: new Date(0),
+        httpOnly: true
+    });
+    res.status(200).json({
+        status: 'success',
+        message: 'Logged out successfully'
+    });
+
 
 })
