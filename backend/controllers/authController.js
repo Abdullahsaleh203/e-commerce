@@ -68,7 +68,7 @@ export const login = asyncHandler(async (req, res, next) => {
     }
     const user = await User.findOne({ email }).select('+password');
 
-    if (!user || !(await user.correctPassword(password, user.password))) {
+    if (!user || !(await user.comparePassword(password, user.password))) {
         return next(new appError('Incorrect email or password', 401));
     }
 

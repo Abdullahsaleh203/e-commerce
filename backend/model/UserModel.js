@@ -53,9 +53,6 @@ userSchema.pre('save', async function (next) {
   }
 });
 
-userSchema.methods.correctPassword = async function (candidatePassword, userPassword) {
-  return await bcrypt.compare(candidatePassword, userPassword);
-};
 
 userSchema.methods.createToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_SECRET, {
