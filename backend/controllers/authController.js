@@ -119,3 +119,22 @@ export const logout = asyncHandler(async (req, res, next) => {
 
 
 })
+// refreshToken
+export const refreshToken = asyncHandler(async (req, res, next) => {
+    const refreshToken = req.cookies.refreshToken
+    if (!refreshToken) {
+        return next(new appError('No refresh token found. Please log in again.', 401));
+    }
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const userId = decoded.userId;
+    const storedToken = await redis.get(`refreshToken: ${userId}`);
+    if (!storedToken || storedToken !== refreshToken) {
+        return next(new appError('Invalid refresh token. Please log in again.', 401));
+    }
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+        return next(new appError('The user belonging to this token no longer exists.', 401));
+    }   
+    // Generate new access token
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(currentUser._id);
+})
