@@ -25,13 +25,13 @@ const storeRefreshToken = async (userId, refreshToken) => {
     await redis.set(`refreshToken: ${userId}`, refreshToken, 'EX', 7 * 24 * 60 * 60);
 }
 // Function to set cookies
+const cookieOptions = {
+    httpOnly: true,
+    maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days for access token
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+};
 const setCookie = (res, accessToken, refreshToken) => {
-    const cookieOptions = {
-        httpOnly: true,
-        maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days for access token
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-    };
     res.cookie('accessToken', accessToken, cookieOptions);
     res.cookie('refreshToken', refreshToken, { 
         ...cookieOptions, 
@@ -134,7 +134,29 @@ export const refreshToken = asyncHandler(async (req, res, next) => {
     const currentUser = await User.findById(userId);
     if (!currentUser) {
         return next(new appError('The user belonging to this token no longer exists.', 401));
-    }   
-    // Generate new access token
-    const { accessToken, refreshToken: newRefreshToken } = generateTokens(currentUser._id);
+    }
+    const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_EXPIRES_IN,
+    });
+    res.cookie('accessToken', accessToken, cookieOptions);
+    res.status(200).json({
+        message: 'Taken refreshed successfully',
+        accessToken,
+    });
+
+
 })
+// get profile
+export const getProfile = asyncHandler(async (req, res, next) => {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+        return next(new appError('User not found', 404));
+    }
+    res.status(200).json({
+        status: 'success',
+        data: {
+            user
+        }
+    });
+})
+

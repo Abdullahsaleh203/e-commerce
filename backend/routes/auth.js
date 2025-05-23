@@ -1,5 +1,5 @@
 import express from 'express';
-import { signup, login, logout } from '../controllers/authController.js';
+import { signup, login, logout ,getProfile } from '../controllers/authController.js';
 import { protect, restrictTo, refreshToken } from '../controllers/auth.js';
 
 const router = express.Router();
@@ -12,7 +12,7 @@ router.get('/logout', logout);
 
 // Protected routes
 router.use(protect);
-
+router.get('/profile', protect, getProfile)
 // Admin only routes
 router.use('/admin', restrictTo('admin'));
 
