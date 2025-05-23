@@ -5,18 +5,40 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv"
 import { redis } from "../utils/redis.js";
 
-dotenv.config() ;
-// Function to generate JWT token
-const generateToken = (userId) => {
-    return jwt.sign({ userId }, process.env.JWT_SECRET, {
+dotenv.config();
+
+//  Generate JWT token
+const generateTokens = (userId) => {
+    const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN,
     });
+
+    // Generate refresh token with longer expiry
+    const refreshToken = jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, {
+        expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+    });
+
+    return { accessToken, refreshToken };
 };
+// Store refresh token in Redis 
 const storeRefreshToken = async (userId, refreshToken) => {
-    // Store the refresh token in Redis or your preferred storage
-    // For example, using Redis:
-    await redis.set(userId, refreshToken);
+    await redis.set(`refreshToken: ${userId}`, refreshToken, 'EX', 7 * 24 * 60 * 60);
 }
+// Function to set cookies
+const setCookie = (res, accessToken, refreshToken) => {
+    const cookieOptions = {
+        httpOnly: true,
+        maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days for access token
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+    };
+    res.cookie('accessToken', accessToken, cookieOptions);
+    res.cookie('refreshToken', refreshToken, { 
+        ...cookieOptions, 
+        maxAge: 15 * 60 * 1000 // 15 minutes for refresh token
+    });
+}
+
 export const signup = asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
     const userExists = await User.findOne({ email });
@@ -28,17 +50,14 @@ export const signup = asyncHandler(async (req, res) => {
     const userObj = user.toObject();
     delete userObj.password;
     // authenticate
-
     // Generate token
-    const { accessToken, refreshToken } = generateToken(user._id);
+    const { accessToken, refreshToken } = generateTokens(user._id);
+    // Store the refresh token in Redis or your preferred storage
     await storeRefreshToken(user._id, refreshToken);
+
     // Set the refresh token in the response cookie
-    res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        secure: process.env.NODE_ENV === 'production', // Set to true in production
-        sameSite: 'strict', // CSRF protection
-    });
+    setCookie(res, accessToken, refreshToken);
+
     res.status(201).json({ message: "User created successfully", user: userObj });
 });
 
@@ -52,14 +71,38 @@ export const login = asyncHandler(async (req, res, next) => {
     if (!user || !(await user.correctPassword(password, user.password))) {
         return next(new appError('Incorrect email or password', 401));
     }
-    // If the password is correct, generate a token
-    // const token = user.createToken();
+
+    // Generate tokens
+    const { accessToken, refreshToken } = generateTokens(user._id);
+
+    // Store refresh token
+    await storeRefreshToken(user._id, refreshToken);
+
+    // Set cookies
+    setCookie(res, accessToken, refreshToken);
+
+    // Remove password from output
+    const userObj = user.toObject();
+    delete userObj.password;
+
     res.status(200).json({
         status: 'success',
-        // token,
         data: {
-            user
+            user: userObj
         }
     });
+})
+
+export const logout = asyncHandler(async (req, res, next) => {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken) {
+        return res.status(200).json({ message: "Logged out successfully" });
+    }
+    // Remove refresh token from Redis
+    if (refreshToken) {
+        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET );
+        await redis.del(`refreshToken: ${decoded.userId}`);
+        
+    }
 
 })
