@@ -1,24 +1,17 @@
-// const express = require('express');
 import express from 'express';
-import User from '../models/userModel.js';
-import jwt from 'jsonwebtoken';
+// import { signup, login, logout, protect, restrictTo } from '../controllers/authController.js';
+import { signup, login } from '../controllers/authController.js';
+
 const router = express.Router();
 
-router.post('/register', async (req, res) => {
-    const { username, email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ username, email, password: hashedPassword });
-    await user.save();
-    res.status(201).json({ message: 'User created' });
-  });
-  
-  router.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
-    res.json({ token });
-  });
+router.post('/signup', signup);
+router.post('/login', login);
+// router.get('/logout', logout);
+
+// Protected routes
+// router.use(protect);
+
+// Admin only routes
+// router.use(restrictTo('admin'));
+
 export default router;

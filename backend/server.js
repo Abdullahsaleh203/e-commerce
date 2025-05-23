@@ -5,8 +5,9 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import mongoose from 'mongoose';
 import rateLimit from 'express-rate-limit';
-import mongoSanitize from 'express-mongo-sanitize';
-import xss from 'xss-clean';
+import authRouter from './routes/auth.js';
+
+// import mongoSanitize from 'express-mongo-sanitize';
 
 const app = express();
 dotenv.config();
@@ -30,9 +31,14 @@ app.use(limiter);
 app.use(morgan('dev'));
 app.use(helmet());
 /// mongoSanitize() is a middleware that helps prevent NoSQL injection attacks by sanitizing user input
-app.use(mongoSanitize());
+// app.use(mongoSanitize()); // Removed duplicate usage
 // Enable CORS for all routes to allow cross-origin requests 
 app.use(cors());
+// Middleware to parse URL-encoded data
+app.use(express.urlencoded({ extended: true })); // Parse incoming requests with JSON payloads
+
+// Data sanitization against NoSQL query injection
+// app.use(mongoSanitize());
 
 // Connect to MongoDB
 const DB = process.env.DATABASE_URI;
@@ -40,14 +46,13 @@ mongoose.connect(DB)
   .then(() => console.log('DB connection successful! 🚀 '))
   .catch((err) => console.error('DB connection error:', err));
 
-// Data sanitization against NoSQL query injection
-app.use(mongoSanitize());
 // Data sanitization against XSS
-app.use(xss());
+// app.use(xss());
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
+app.use('/api/v1/auth', authRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT} 🌐 `);
