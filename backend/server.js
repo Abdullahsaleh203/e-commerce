@@ -8,7 +8,7 @@ import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 // import mongoSanitize from 'express-mongo-sanitize';
 // import xss from 'xss';
-import authRouter from './routes/auth.js';
+import  userRouter  from './routes/userRouter.js';
 
 const app = express();
 dotenv.config();
@@ -27,9 +27,9 @@ app.use(express.json({ limit: '10kb' }));
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 app.use(limiter);
 
-// connecting to MongoDB
 // Middleware to log requests
 // Development logging
+
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
@@ -66,7 +66,7 @@ mongoose.connect(DB)
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
-app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/auth', userRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT} 🌐 `);
