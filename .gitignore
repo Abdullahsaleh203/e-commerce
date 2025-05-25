@@ -2,3 +2,7 @@
 node_modules
 .env
 .vscode/settings.json
+backend/controllers/auth.js
+backend/controllers/auth.js.new
+docs-as-code-tutorial/
+docs-as-code-tutorial/docusaurus.config.js

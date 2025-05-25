@@ -9,6 +9,7 @@ import cookieParser from 'cookie-parser';
 // import mongoSanitize from 'express-mongo-sanitize';
 // import xss from 'xss';
 import  userRouter  from './routes/userRouter.js';
+import productsRouter from './routes/productsRouter.js';
 
 const app = express();
 dotenv.config();
@@ -67,6 +68,7 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 app.use('/api/v1/auth', userRouter);
+app.use('/api/v1/auth', productsRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT} 🌐 `);

@@ -4,6 +4,7 @@ import appError from "../utils/appError.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv"
 import { redis } from "../utils/redis.js";
+import { promisify } from "util";
 
 dotenv.config();
 
@@ -159,4 +160,5 @@ export const getProfile = asyncHandler(async (req, res, next) => {
         }
     });
 })
+
 
