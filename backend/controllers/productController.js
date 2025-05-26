@@ -7,6 +7,7 @@ export const getAllProducts = asyncHandler(async (req, res, next) => {
     res.json({ products }) 
 })
  
+
 export const getFeaturedProducts =  asyncHandler(async (req, res, next) => { 
     let FeaturedProducts = await redis.get("featured_products");
     if (!FeaturedProducts){
