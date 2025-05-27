@@ -6,5 +6,6 @@ import { getAllProducts, getFeaturedProducts } from '../controllers/productContr
 
 router.get('/products', protect, restrictTo('admin'), getAllProducts);
 router.get('/featured-products', getFeaturedProducts);
+// router.post('/products', protect, restrictTo('admin'), createProduct);
 
 export default router;
