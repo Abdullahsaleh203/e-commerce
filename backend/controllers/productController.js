@@ -27,3 +27,25 @@ export const getFeaturedProducts =  asyncHandler(async (req, res, next) => {
     await redis.set("featured_products", JSON.stringify(FeaturedProducts));
     res.json(FeaturedProducts );
 })
+
+export const createProduct = asyncHandler(async (req, res, next) => { 
+    const { name, price, description, image, isFeatured , category  } = req.body;
+
+    // Validate required fields
+    if (!name || !price || !description || !category) {
+        return next(new AppError("Name, price, and description are required", 400));
+    }
+
+    // Create new product
+    const newProduct = await Product.create({
+        name,
+        price,
+        description,
+        image,
+        category,
+        isFeatured,
+        featured: featured || false
+    });
+
+    res.status(201).json({ product: newProduct });  
+})
