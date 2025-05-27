@@ -1,6 +1,8 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import AppError from "../utils/appError.js";
 import Product from "../model/productModel.js";
+// import { redis } from "../utils/redis.js";
+import cloudinary from "../utils/cloudinary.js";
 // 
 export const getAllProducts = asyncHandler(async (req, res, next) => { 
     const products = await Product.find({}).sort({ createdAt: -1 });
@@ -29,22 +31,32 @@ export const getFeaturedProducts =  asyncHandler(async (req, res, next) => {
 })
 
 export const createProduct = asyncHandler(async (req, res, next) => { 
-    const { name, price, description, image, isFeatured , category  } = req.body;
+    const { name, price, description, image , category  } = req.body;
 
     // Validate required fields
     if (!name || !price || !description || !category) {
         return next(new AppError("Name, price, and description are required", 400));
     }
-
+    let cloudinaryResponse = null;
+    // Validate and upload image to Cloudinary if provided
+    if (image) {
+        try {
+            cloudinaryResponse = await cloudinary.uploader.upload(image, {
+                folder: "products",
+                allowed_formats: ["jpg", "jpeg", "png"],
+                resource_type: "image"
+            });
+        } catch (error) {
+            return next(new AppError("Image upload failed. Please try again.", 500));
+        }
+    }
     // Create new product
     const newProduct = await Product.create({
         name,
         price,
         description,
-        image,
-        category,
-        isFeatured,
-        featured: featured || false
+        image : cloudinaryResponse ? cloudinaryResponse.secure_url : null,
+        category
     });
 
     res.status(201).json({ product: newProduct });  
