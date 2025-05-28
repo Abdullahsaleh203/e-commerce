@@ -18,6 +18,7 @@ const PORT = process.env.PORT || 3000;
 
 // Set security HTTP headers
 
+
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
@@ -29,6 +30,7 @@ const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 app.use(limiter);
 
 // Middleware to log requests
+
 // Development logging
 
 if (process.env.NODE_ENV === 'development') {
