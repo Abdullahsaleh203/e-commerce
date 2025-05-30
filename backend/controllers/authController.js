@@ -13,12 +13,10 @@ const generateTokens = (userId) => {
     const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN,
     });
-
     // Generate refresh token with longer expiry
     const refreshToken = jwt.sign({ userId }, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
     });
-
     return { accessToken, refreshToken };
 };
 // Store refresh token in Redis 
@@ -72,20 +70,15 @@ export const login = asyncHandler(async (req, res, next) => {
     if (!user || !(await user.comparePassword(password, user.password))) {
         return next(new appError('Incorrect email or password', 401));
     }
-
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user._id);
-
     // Store refresh token
     await storeRefreshToken(user._id, refreshToken);
-
     // Set cookies
     setCookie(res, accessToken, refreshToken);
-
     // Remove password from output
     const userObj = user.toObject();
     delete userObj.password;
-
     res.status(200).json({
         status: 'success',
         data: {
