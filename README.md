@@ -4,6 +4,7 @@ A modern e-commerce platform built with Next.js, featuring a responsive design a
 
 ## Features
 
+
 - 🛍️ Product browsing and searching
 - 🛒 Shopping cart functionality
 - 👤 User authentication and profiles
