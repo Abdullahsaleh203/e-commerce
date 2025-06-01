@@ -88,3 +88,8 @@ export const getRecommendedProdouct = asyncHandler(async (req, res, next) => {
     ])
     res.status(200).json(products);
 })
+export const getProductsByCategory = asyncHandler(async(req, res ,next)=>{
+    const { category } = req.params;
+    const products = await Product.find({category})
+    res.json(products)
+});
