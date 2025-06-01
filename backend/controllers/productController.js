@@ -72,7 +72,8 @@ export const deleteProduct = asyncHandler(async (req, res, next) => {
     await product.deleteOne(); // delete the product from the database
     res.status(200).json({ message: "Product deleted successfully" });
 })
-export const getRecommendedProdouct = asyncHandler(async (req, res, next) => {
+// Get recommended products 
+export const getRecommendedProduct = asyncHandler(async (req, res, next) => {
     const products = await Product.aggregate([
         {
             $sample: { size: 3 }
@@ -88,8 +89,30 @@ export const getRecommendedProdouct = asyncHandler(async (req, res, next) => {
     ])
     res.status(200).json(products);
 })
+// get products by category
 export const getProductsByCategory = asyncHandler(async(req, res ,next)=>{
     const { category } = req.params;
     const products = await Product.find({category})
     res.json(products)
 });
+
+export const ToggleFeaturedProduct = asyncHandler(async (req, res, next) => {
+    const product = await Product.findById(req.params.id);
+    if (product) {
+        product.isFeatured = !product.isFeatured;
+        const updatedProduct = await product.save();
+        await updateFeaturedProductsCache(); // Update the cache after toggling
+        res.json(updatedProduct);
+    }
+    // Toggle the featured status
+    // // Invalidate the cache for featured products
+    // await redis.del("featured_products");
+})
+async function updateFeaturedProductsCache() {
+    const featuredProducts = await Product.find({ isFeatured: true }).lean().sort({ createdAt: -1 });
+    if (featuredProducts.length > 0) {
+        await redis.set("featured_products", JSON.stringify(featuredProducts));
+    } else {
+        await redis.del("featured_products");
+    }
+}
