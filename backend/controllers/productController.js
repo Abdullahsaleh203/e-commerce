@@ -60,3 +60,15 @@ export const createProduct = asyncHandler(async (req, res, next) => {
 
     res.status(201).json(product);  
 })
+export const deleteProduct = asyncHandler(async (req, res, next) => { 
+   const product = await Product.findById(req.params.id)
+   if (!product) {
+    return next(new AppError("Product not found", 404));
+   }
+   if (product.image) {
+       const publicId = product.image.split("/").pop().split(".")[0]; // get the public id from the image url 
+       await cloudinary.uploader.destroy(`product/${publicId}`); // delete the image from cloudinary
+    }
+    await product.deleteOne(); // delete the product from the database
+    res.status(200).json({ message: "Product deleted successfully" });
+})
