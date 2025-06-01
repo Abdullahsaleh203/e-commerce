@@ -1,11 +1,11 @@
 import express from 'express';
 const router = express.Router();
 import { protect , restrictTo} from '../middleware/authMiddleware.js';
-import { getAllProducts, getFeaturedProducts } from '../controllers/productController.js';
+import { getAllProducts, getFeaturedProducts ,createProduct} from '../controllers/productController.js';
 
 
 router.get('/products', protect, restrictTo('admin'), getAllProducts);
 router.get('/featured-products', getFeaturedProducts);
-// router.post('/products', protect, restrictTo('admin'), createProduct);
+router.post('/products', protect, restrictTo('admin'), createProduct);
 
 export default router;
