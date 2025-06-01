@@ -72,3 +72,19 @@ export const deleteProduct = asyncHandler(async (req, res, next) => {
     await product.deleteOne(); // delete the product from the database
     res.status(200).json({ message: "Product deleted successfully" });
 })
+export const getRecommendedProdouct = asyncHandler(async (req, res, next) => {
+    const products = await Product.aggregate([
+        {
+            $sample: { size: 3 }
+        },
+        {
+            $project: {
+                _id: 1,
+                name: 1,
+                price: 1,
+                image: 1
+            }
+        }
+    ])
+    res.status(200).json(products);
+})
