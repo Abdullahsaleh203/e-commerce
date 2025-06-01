@@ -32,7 +32,6 @@ export const getFeaturedProducts =  asyncHandler(async (req, res, next) => {
 
 export const createProduct = asyncHandler(async (req, res, next) => { 
     const { name, price, description, image , category  } = req.body;
-
     // Validate required fields
     if (!name || !price || !description || !category) {
         return next(new AppError("Name, price, and description are required", 400));
@@ -42,22 +41,22 @@ export const createProduct = asyncHandler(async (req, res, next) => {
     if (image) {
         try {
             cloudinaryResponse = await cloudinary.uploader.upload(image, {
-                folder: "products",
-                allowed_formats: ["jpg", "jpeg", "png"],
-                resource_type: "image"
+                folder: "products"
+                // ,allowed_formats: ["jpg", "jpeg", "png"],
+                // resource_type: "image"
             });
         } catch (error) {
             return next(new AppError("Image upload failed. Please try again.", 500));
         }
     }
     // Create new product
-    const newProduct = await Product.create({
+    const product = await Product.create({
         name,
         price,
         description,
-        image : cloudinaryResponse ? cloudinaryResponse.secure_url : null,
+        image : cloudinaryResponse ? cloudinaryResponse.secure_url : "",
         category
     });
 
-    res.status(201).json({ product: newProduct });  
+    res.status(201).json(product);  
 })
