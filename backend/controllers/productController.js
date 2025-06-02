@@ -109,7 +109,7 @@ export const ToggleFeaturedProduct = asyncHandler(async (req, res, next) => {
     // await redis.del("featured_products");
 })
 async function updateFeaturedProductsCache() {
-    const featuredProducts = await Product.find({ isFeatured: true }).lean().sort({ createdAt: -1 });
+    const featuredProducts = await Product.find({ isFeatured: true }).lean();
     if (featuredProducts.length > 0) {
         await redis.set("featured_products", JSON.stringify(featuredProducts));
     } else {

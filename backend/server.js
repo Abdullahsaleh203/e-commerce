@@ -8,8 +8,9 @@ import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 // import mongoSanitize from 'express-mongo-sanitize';
 // import xss from 'xss';
-import  userRouter  from './routes/userRouter.js';
-import productsRouter from './routes/productsRouter.js';
+import  userRoutes  from './routes/userRoutes.js';
+import productsRoutes from './routes/productsRoutes.js';
+import cartRoutes from './routes/cartRoutes.js';
 
 const app = express();
 
@@ -70,8 +71,9 @@ mongoose.connect(DB)
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
-app.use('/api/v1/auth', userRouter);
-app.use('/api/v1/auth', productsRouter);
+app.use('/api/v1/auth', userRoutes);
+app.use('/api/v1/products', productsRoutes);
+app.use('/api/v1/cart', cartRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT} 🌐 `);
