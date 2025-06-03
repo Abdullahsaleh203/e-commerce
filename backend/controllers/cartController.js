@@ -15,13 +15,15 @@ export const addToCart = asyncHandler(async (req, res, next) => {
     res.status(201).json(user.cart);
 })
 export const removeAllFromCart = asyncHandler(async (req, res, next) => {
+    const { ProductId } = req.body;
     const user = req.user;
-    user.cart = [];
+    if (!ProductId) { 
+        user.cart = [];
+    } else {
+        user.cart = user.cart.filter(item => item.ProductId.toString() !== ProductId);
+    }
     await user.save();
-    res.status(204).json({
-        status: 'success',
-        message: 'All items removed from cart'
-    });
+    res.status(204).json(user.cart);
 })
 export const updateQuantity = asyncHandler(async (req, res, next) => {
     const { ProductId, quantity } = req.body;
