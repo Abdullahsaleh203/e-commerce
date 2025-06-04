@@ -29,16 +29,31 @@ export const updateQuantity = asyncHandler(async (req, res, next) => {
     const { ProductId, quantity } = req.body;
     const user = req.user;
     const existingItem = user.cart.find(item => item.ProductId.toString() === ProductId);
-    if (!existingItem) {
+    if (existingItem) {
+        if (quantity === 0) {
+            user.cart = user.cart.filter(item => item.ProductId.toString() !== ProductId);
+            await user.save();
+            return res.json(user.cart);
+        }
+        existingItem.quantity = quantity;
+        await user.save();
+        res.json(user.cart);
+    }else {
         return next(new AppError('Product not found in cart', 404));
-    }
-    existingItem.quantity = quantity;
-    await user.save();
-    res.status(200).json(user.cart);
+        }
+    
 })
 export const getCartProducts = asyncHandler(async (req, res, next) => {
     const user = req.user;
-    res.status(200).json(user.cart);
+    const cartProducts = await Product.find({ _id: { $in: user.cart.map(item => item.ProductId) } });
+    const cartProductsWithQuantity = cartProducts.map(product => {
+        const item = user.cart.find(item => item.ProductId.toString() === product._id.toString());
+        return {
+            ...product._doc,
+            quantity: item.quantity
+        }
+    }); 
+    res.json(cartProductsWithQuantity);
 })
 
 
