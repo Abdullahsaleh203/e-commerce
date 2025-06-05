@@ -1,5 +1,5 @@
 import asyncHandler from "../utils/asyncHandler.js";
-import appError from "../utils/appError.js";
+import appError from "../utils/AppError.js";
 // import { promisify } from 'util';
 import User from "../model/UserModel.js"
 
@@ -15,7 +15,7 @@ export const protect = asyncHandler(async (req, res, next) => {
     if (!user) {
         return next(new appError('The user belonging to this token does not exist.', 401));
     }
-    req.user = user 
+    req.user = user
     next();
 });
 

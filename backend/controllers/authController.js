@@ -1,6 +1,6 @@
 import User from "../model/UserModel.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import appError from "../utils/appError.js";
+import appError from "../utils/AppError.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv"
 import { redis } from "../utils/redis.js";
@@ -32,8 +32,8 @@ const cookieOptions = {
 };
 const setCookie = (res, accessToken, refreshToken) => {
     res.cookie('accessToken', accessToken, cookieOptions);
-    res.cookie('refreshToken', refreshToken, { 
-        ...cookieOptions, 
+    res.cookie('refreshToken', refreshToken, {
+        ...cookieOptions,
         maxAge: 15 * 60 * 1000 // 15 minutes for refresh token
     });
 }
@@ -94,7 +94,7 @@ export const logout = asyncHandler(async (req, res, next) => {
     }
     // Remove refresh token from Redis
     if (refreshToken) {
-        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET );
+        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
         await redis.del(`refreshToken: ${decoded.userId}`);
     }
     // Clear cookies

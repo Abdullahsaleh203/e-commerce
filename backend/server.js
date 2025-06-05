@@ -11,7 +11,7 @@ import cookieParser from 'cookie-parser';
 import  userRoutes  from './routes/userRoutes.js';
 import productsRoutes from './routes/productsRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
-
+import couponsRoutes from './routes/couponsRoutes.js';
 const app = express();
 
 dotenv.config();
@@ -74,6 +74,7 @@ app.get('/', (req, res) => {
 app.use('/api/v1/auth', userRoutes);
 app.use('/api/v1/products', productsRoutes);
 app.use('/api/v1/cart', cartRoutes);
+app.use('/api/v1/coupons', couponsRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT} 🌐 `);

@@ -1,90 +1,64 @@
 import asyncHandler from '../utils/asyncHandler.js';
-import AppError from '../utils/appError.js';
+import AppError from '../utils/AppError.js';
 import Product from '../models/productModel.js';
+
+export const getCartProducts = asyncHandler(async (req, res, next) => {
+    if (!req.user.cartItems || req.user.cartItems.length === 0) {
+        return res.json([]);
+    }
+    const productIds = req.user.cartItems.map(item => item.ProductId);
+    const products = await Product.find({ _id: { $in: productIds } });
+    // add quantity for each product
+    const cartItems = products.map(product => {
+        const item = req.user.cartItems.find(cartItem => cartItem.ProductId.toString() === product._id.toString());
+        return { ...product.toJSON(), quantity: item.quantity }
+    });
+    res.json(cartItems);
+
+})
 
 export const addToCart = asyncHandler(async (req, res, next) => {
     const { ProductId } = req.body;
     const user = req.user;
-    const existingItem = user.cart.find(item => item.ProductId.toString() === ProductId);
+    const existingItem = user.cartItems.find(item => item.ProductId.toString() === ProductId);
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
-        user.cart.push({ ProductId, quantity: 1 });
+        user.cartItems.push({ ProductId, quantity: 1 });
     }
     await user.save();
-    res.status(201).json(user.cart);
+    res.status(201).json(user.cartItems);
 })
+
 export const removeAllFromCart = asyncHandler(async (req, res, next) => {
     const { ProductId } = req.body;
     const user = req.user;
-    if (!ProductId) { 
-        user.cart = [];
+    if (!ProductId) {
+        user.cartItems = [];
     } else {
-        user.cart = user.cart.filter(item => item.ProductId.toString() !== ProductId);
+        user.cartItems = user.cartItems.filter(item => item.ProductId.toString() !== ProductId.toString());
     }
     await user.save();
-    res.status(204).json(user.cart);
+    res.status(204).json(user.cartItems);
 })
+
 export const updateQuantity = asyncHandler(async (req, res, next) => {
-    const { ProductId, quantity } = req.body;
+    const { id: ProductId } = req.params;
+    const { quantity } = req.body;
     const user = req.user;
-    const existingItem = user.cart.find(item => item.ProductId.toString() === ProductId);
+    const existingItem = user.cartItems.find(item => item.ProductId.toString() === ProductId.toString());
     if (existingItem) {
         if (quantity === 0) {
-            user.cart = user.cart.filter(item => item.ProductId.toString() !== ProductId);
+            user.cartItems = user.cartItems.filter(item => item.ProductId.toString() !== ProductId.toString());
             await user.save();
-            return res.json(user.cart);
+            return res.json(user.cartItems);
         }
         existingItem.quantity = quantity;
         await user.save();
-        res.json(user.cart);
-    }else {
-        return next(new AppError('Product not found in cart', 404));
-        }
-    
-})
-export const getCartProducts = asyncHandler(async (req, res, next) => {
-    const user = req.user;
-    const cartProducts = await Product.find({ _id: { $in: user.cart.map(item => item.ProductId) } });
-    const cartProductsWithQuantity = cartProducts.map(product => {
-        const item = user.cart.find(item => item.ProductId.toString() === product._id.toString());
-        return {
-            ...product._doc,
-            quantity: item.quantity
-        }
-    }); 
-    res.json(cartProductsWithQuantity);
+        res.json(user.cartItems);
+    } else {
+        return next(new AppError('Item not found in cart', 404));
+    }
 })
 
 
-
-
-
-
-
-
-
-
-
-// const { productId, quantity } = req.body;
-
-// // Validate required fields
-// if (!productId || !quantity) {
-//     return next(new AppError('Product ID and quantity are required', 400));
-// }
-
-// // Find the product by ID
-// const product = await Product.findById(productId);
-// if (!product) {
-//     return next(new AppError('Product not found', 404));
-// }
-
-// // Add to cart logic (this could be a session, database, etc.)
-// // For simplicity, we'll just return the product and quantity
-// res.status(201).json({
-//     status: 'success',
-//     data: {
-//         product,
-//         quantity
-//     }
-// });
