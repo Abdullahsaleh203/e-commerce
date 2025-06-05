@@ -12,6 +12,7 @@ import  userRoutes  from './routes/userRoutes.js';
 import productsRoutes from './routes/productsRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
 import couponsRoutes from './routes/couponsRoutes.js';
+
 const app = express();
 
 dotenv.config();
