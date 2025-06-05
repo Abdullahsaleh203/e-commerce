@@ -1,6 +1,6 @@
 import User from "../model/UserModel.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import appError from "../utils/AppError.js";
+import AppError from "../utils/AppError.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv"
 import { redis } from "../utils/redis.js";
@@ -63,12 +63,12 @@ export const signup = asyncHandler(async (req, res) => {
 export const login = asyncHandler(async (req, res, next) => {
     const { email, password } = req.body;
     if (!email || !password) {
-        return next(new appError('Please provide email and password', 400));
+        return next(new AppError('Please provide email and password', 400));
     }
     const user = await User.findOne({ email }).select('+password');
 
     if (!user || !(await user.comparePassword(password, user.password))) {
-        return next(new appError('Incorrect email or password', 401));
+        return next(new AppError('Incorrect email or password', 401));
     }
     // Generate tokens
     const { accessToken, refreshToken } = generateTokens(user._id);
@@ -117,17 +117,17 @@ export const logout = asyncHandler(async (req, res, next) => {
 export const refreshToken = asyncHandler(async (req, res, next) => {
     const refreshToken = req.cookies.refreshToken
     if (!refreshToken) {
-        return next(new appError('No refresh token found. Please log in again.', 401));
+        return next(new AppError('No refresh token found. Please log in again.', 401));
     }
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const userId = decoded.userId;
     const storedToken = await redis.get(`refreshToken: ${userId}`);
     if (!storedToken || storedToken !== refreshToken) {
-        return next(new appError('Invalid refresh token. Please log in again.', 401));
+        return next(new AppError('Invalid refresh token. Please log in again.', 401));
     }
     const currentUser = await User.findById(userId);
     if (!currentUser) {
-        return next(new appError('The user belonging to this token no longer exists.', 401));
+        return next(new AppError('The user belonging to this token no longer exists.', 401));
     }
     const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN,
@@ -144,7 +144,7 @@ export const refreshToken = asyncHandler(async (req, res, next) => {
 export const getProfile = asyncHandler(async (req, res, next) => {
     const user = await User.findById(req.user._id);
     if (!user) {
-        return next(new appError('User not found', 404));
+        return next(new AppError('User not found', 404));
     }
     res.status(200).json({
         status: 'success',
