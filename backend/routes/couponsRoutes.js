@@ -1,10 +1,10 @@
 import express from "express";
 import { protect } from "../middleware/authMiddleware";
+import { getCoupons, validateCoupon } from "../controllers/copoutController.js";
 
 const router = express.Router();
 
-router.get('/', protect, (req, res) => {
-    res.send("Get all coupons");
-});
+router.get('/', protect, getCoupons);
+router.post('/validate', protect, validateCoupon);
 
 export default router;
