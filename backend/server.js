@@ -63,7 +63,7 @@ app.use(express.urlencoded({ extended: true })); // Parse incoming requests with
 // Connect to MongoDB
 const DB = process.env.DATABASE_URI;
 mongoose.connect(DB)
-  .then(() => console.log('DB connection successful! 🚀 '))
+  .then(() => console.log('DB connection successful! 🚀  🌐'))
   .catch((err) => console.error('DB connection error:', err));
 
 // Data sanitization against XSS
