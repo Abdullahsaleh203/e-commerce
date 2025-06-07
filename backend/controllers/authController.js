@@ -9,7 +9,7 @@ import { promisify } from "util";
 dotenv.config();
 
 //  Generate JWT token
-const generateTokens = (userId) => {
+const generateTokens = (userId) => {   
     const accessToken = jwt.sign({ userId }, process.env.JWT_SECRET, {
         expiresIn: process.env.JWT_EXPIRES_IN,
     });
@@ -53,7 +53,6 @@ export const signup = asyncHandler(async (req, res) => {
     const { accessToken, refreshToken } = generateTokens(user._id);
     // Store the refresh token in Redis or your preferred storage
     await storeRefreshToken(user._id, refreshToken);
-
     // Set the refresh token in the response cookie
     setCookie(res, accessToken, refreshToken);
 
