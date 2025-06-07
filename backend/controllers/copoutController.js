@@ -1,6 +1,6 @@
-import asyncHandler from "../utils/asyncHandler";
-import AppError from "../utils/AppError";
-import Coupon from "../model/couponModel"; 
+import asyncHandler from "../utils/asyncHandler.js";
+import AppError from "../utils/AppError.js";
+import Coupon from "../model/CouponModel.js"; 
 
 export const getCoupons = asyncHandler(async (req, res) => {
     // Assuming you have a Coupon model to fetch coupons from the database

@@ -1,6 +1,6 @@
 import asyncHandler from '../utils/asyncHandler.js';
 import AppError from '../utils/AppError.js';
-import Product from '../models/productModel.js';
+import Product from '../models/ProductModel.js';
 
 export const getCartProducts = asyncHandler(async (req, res, next) => {
     if (!req.user.cartItems || req.user.cartItems.length === 0) {
