@@ -34,8 +34,6 @@ export const createCheckoutSession = asyncHandler(async (req, res, next) => {
             totalAmount -= coupon.discountAmount * 100; // Convert to cents
         }
 
-        
-
     }
 
     // create checkout session
