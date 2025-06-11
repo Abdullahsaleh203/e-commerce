@@ -55,7 +55,7 @@ export const createCheckoutSession = asyncHandler(async (req, res, next) => {
     });
     if (!session) {
         return next(new AppError('Failed to create Stripe session', 500));
-    }
+    } 
     res.json({ id: session.id });
 });
 async function createStripeCoupon(couponCode, discountPercentage) {
@@ -70,4 +70,14 @@ async function createStripeCoupon(couponCode, discountPercentage) {
     } catch (error) {
         throw new AppError('Failed to create Stripe coupon', 500);
     }
+}
+async function createNewCoupon(couponCode, discountAmount) {
+     const coupon = await Coupon.create({
+        code: "GIFT" +Math.random().toString(36).substring(2, 15).toUpperCase(),
+         discountPercentage: 10,
+         expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        user: req.user._id,
+    });
+    await coupon.save();
+    return coupon;
 }
