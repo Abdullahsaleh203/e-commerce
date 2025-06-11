@@ -31,10 +31,28 @@ export const createCheckoutSession = asyncHandler(async (req, res, next) => {
             code: couponCode, user: req.user._id, isActive: true
         });
         if(coupon) {
-            totalAmount -= coupon.discountAmount * 100; // Convert to cents
+            totalAmount -= Math.round(coupon.discountAmount * 100); // Convert to cents
         }
-
     }
+    const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: await Promise.all(lineItems),
+        mode: 'payment',
+        success_url: `${req.protocol}://${req.get('host')}/success`,
+        cancel_url: `${req.protocol}://${req.get('host')}/cancel`,
+        discounts: coupon ? [
+            {
+            coupon: await createStripeCoupon(couponCode, coupon.discountAmount)
+            }
+        ] : [],
+        metadata: {
+            userId: req.user._id.toString(),
+            products: JSON.stringify(products.map(item => ({
+                ProductId: item.ProductId,
+                quantity: item.quantity
+            }))),
+        },
+    });
 
     // create checkout session
     // const { cartItems } = req.user;
@@ -70,7 +88,18 @@ export const createCheckoutSession = asyncHandler(async (req, res, next) => {
     //         }))),
     //     },
 
-
-
     res.json({ id: session.id });
 });
+async function createStripeCoupon(couponCode, discountPercentage) {
+    try {
+        const coupon = await stripe.coupons.create({
+            name: couponCode,
+            percent_off: discountPercentage, // Convert to cents
+            currency: 'usd',
+            duration: 'once',
+        });
+        return coupon;
+    } catch (error) {
+        throw new AppError('Failed to create Stripe coupon', 500);
+    }
+}
