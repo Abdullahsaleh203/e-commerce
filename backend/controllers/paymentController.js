@@ -81,7 +81,8 @@ async function createNewCoupon(couponCode, discountAmount) {
          discountPercentage: 10,
          expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         user: req.user._id,
-    });
+     });
+    
     await coupon.save();
     return coupon;
 }
