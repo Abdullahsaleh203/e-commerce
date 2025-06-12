@@ -2,13 +2,17 @@ import asyncHandler from "../utils/asyncHandler";
 import stripe from "../utils/stripe.js";
 import AppError from "../utils/AppError.js";
 import Product from "../models/ProductModel.js";
+import Coupon from "../models/CouponModel.js";
 
 export const createCheckoutSession = asyncHandler(async (req, res, next) => {
-    
+    if (!req.user) {
+        return next(new AppError('User not authenticated', 401));
+    }
     const { products, couponCode } = req.body;
     if (!Array.isArray(products) || products.length === 0) {
         return res.status(400).json({ message: "No products provided" });
     }
+
     let totalAmount = 0;
     const lineItems = products.map(async product => {
         const amount = Math.round(product.price * 100); // stripe expects amounts in cents
@@ -73,7 +77,7 @@ async function createStripeCoupon(couponCode, discountPercentage) {
 }
 async function createNewCoupon(couponCode, discountAmount) {
      const coupon = await Coupon.create({
-        code: "GIFT" +Math.random().toString(36).substring(2, 15).toUpperCase(),
+        code: "GIFT" + Math.random().toString(36).substring(2, 15).toUpperCase(),
          discountPercentage: 10,
          expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
         user: req.user._id,
