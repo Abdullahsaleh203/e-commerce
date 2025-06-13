@@ -42,7 +42,7 @@ export const createCheckoutSession = asyncHandler(async (req, res, next) => {
         payment_method_types: ['card'],
         line_items: await Promise.all(lineItems),
         mode: 'payment',
-        success_url: `${req.protocol}://${req.get('host')}/success`,
+        success_url: `${req.protocol}://${req.get('host')}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${req.protocol}://${req.get('host')}/cancel`,
         discounts: coupon ? [
             {
@@ -51,38 +51,40 @@ export const createCheckoutSession = asyncHandler(async (req, res, next) => {
         ] : [],
         metadata: {
             userId: req.user._id.toString(),
+            couponCode: couponCode || "" ,
             products: JSON.stringify(products.map(item => ({
-                ProductId: item.ProductId,
-                quantity: item.quantity
+                // userId: req.user._id.toString(),
+                ProductId: item._id,
+                quantity: item.quantity,
+                price: item.price,
             }))),
         },
     });
     if (!session) {
         return next(new AppError('Failed to create Stripe session', 500));
     } 
-    res.json({ id: session.id });
+    if (totalAmount <= 2000) {
+        await createNewCoupon(req.user._id);
+    }
+    return res.status(200).json({ id: session.id, totalAmount: totalAmount / 100/100 });
 });
-async function createStripeCoupon(couponCode, discountPercentage) {
-    try {
+async function createStripeCoupon(discountPercentage) {
+
         const coupon = await stripe.coupons.create({
             name: couponCode,
-            percent_off: discountPercentage, // Convert to cents
-            currency: 'usd',
+            percent_off: discountPercentage, 
             duration: 'once',
         });
-        return coupon;
-    } catch (error) {
-        throw new AppError('Failed to create Stripe coupon', 500);
-    }
+        return coupon.id;
+
 }
-async function createNewCoupon(couponCode, discountAmount) {
-     const coupon = await Coupon.create({
+async function createNewCoupon(userId) {
+     const newCoupon = await Coupon.create({
         code: "GIFT" + Math.random().toString(36).substring(2, 15).toUpperCase(),
          discountPercentage: 10,
          expirationDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-        user: req.user._id,
+         user: userId,
      });
-    
-    await coupon.save();
-    return coupon;
+    await newCoupon.save();
+    return newCoupon;
 }
