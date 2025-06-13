@@ -12,6 +12,8 @@ import  userRoutes  from './routes/userRoutes.js';
 import productsRoutes from './routes/productsRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
 import couponsRoutes from './routes/couponsRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js'
 
 const app = express();
 
@@ -76,6 +78,8 @@ app.use('/api/v1/auth', userRoutes);
 app.use('/api/v1/products', productsRoutes);
 app.use('/api/v1/cart', cartRoutes);
 app.use('/api/v1/coupons', couponsRoutes);
+app.use('/api/v1/payment', paymentRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT} 🌐 `);

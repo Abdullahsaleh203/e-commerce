@@ -1,9 +1,11 @@
-import asyncHandler from "../utils/asyncHandler";
+import asyncHandler from "../utils/asyncHandler.js";
 import stripe from "../utils/stripe.js";
 import AppError from "../utils/AppError.js";
-import Coupon from "../models/CouponModel.js";
-import Order from "../models/OrderModel.js";
-import Product from "../models/ProductModel.js";
+import Coupon from "../model/CouponModel.js";
+import Order from "../model/OrderModel.js";
+
+
+
 
 export const createCheckoutSession = asyncHandler(async (req, res, next) => {
     if (!req.user) {
@@ -41,7 +43,7 @@ export const createCheckoutSession = asyncHandler(async (req, res, next) => {
     }
     const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
-        line_products: await Promise.all(lineItems),
+        line_items: await Promise.all(lineItems),
         mode: 'payment',
         success_url: `${req.protocol}://${req.get('host')}/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${req.protocol}://${req.get('host')}/cancel`,
@@ -67,9 +69,9 @@ export const createCheckoutSession = asyncHandler(async (req, res, next) => {
     if (totalAmount <= 2000) {
         await createNewCoupon(req.user._id);
     }
-    return res.status(200).json({ id: session.id, totalAmount: totalAmount / 100/100 });
+    return res.status(200).json({ id: session.id, totalAmount: totalAmount / 100 });
 });
-async function createStripeCoupon(discountPercentage) {
+async function createStripeCoupon(couponCode, discountPercentage) {
 
         const coupon = await stripe.coupons.create({
             name: couponCode,
@@ -98,6 +100,11 @@ export const checkoutSuccess = asyncHandler(async (req, res) => {
         return res.status(400).json({ message: "Session ID is required" });
     }
     const session = await stripe.checkout.sessions.retrieve(sessionId);
+    
+    if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+    }
+    
     // Check if the session exists and has a payment status
     if (session.payment_status === 'paid') {
         // If the session has a coupon code, mark it as used
@@ -108,31 +115,96 @@ export const checkoutSuccess = asyncHandler(async (req, res) => {
             }, {
                 isActive: false
             });
-            // create a new order 
-            const products = JSON.parse(session.metadata.products);
-            const newOrder = {
-                user: session.metadata.userId,
-                products: products.map(product => ({
-                    ProductId: product.ProductId,
-                    quantity: product.quantity,
-                    price: product.price,
-                })),
-                totalAmount: session.amount_total / 100, // Convert from cents to dollars
-                stripeSessionId: sessionId
-                // ,paymentStatus: session.payment_status,
-                // paymentMethod: session.payment_method_types[0],
-                // couponCode: session.metadata.couponCode || null,
-            };
-            await Order.create(newOrder);  
-            res.status(200).json({
-                message: "Order created successfully",
-                orderId: newOrder._id
-            });
         }
-        if (!session) {
-            return res.status(404).json({ message: "Session not found" });
-        }
-
+        
+        // create a new order 
+        const products = JSON.parse(session.metadata.products);
+        const newOrder = {
+            user: session.metadata.userId,
+            products: products.map(product => ({
+                ProductId: product.ProductId,
+                quantity: product.quantity,
+                price: product.price,
+            })),
+            totalAmount: session.amount_total / 100, // Convert from cents to dollars
+            stripeSessionId: sessionId
+            // ,paymentStatus: session.payment_status,
+            // paymentMethod: session.payment_method_types[0],
+            // couponCode: session.metadata.couponCode || null,
+        };
+        const createdOrder = await Order.create(newOrder);  
+        res.status(200).json({
+            message: "Order created successfully",
+            orderId: createdOrder._id
+        });
     }
 });
 
+
+
+
+// export const getAnalytics = asyncHandler(async (req, res, next) => {
+//     // Get basic analytics data
+//     const totalUser = await User.countDocuments();
+//     const totalProducts = await Product.countDocuments();
+//     const salesData = await Order.aggregate([
+//         {
+//             $group: {
+//                 _id: null,
+//                 totalSales: { $sum: 1 },
+//                 totalRevenue: { $sum: "$totalAmount" }
+//                 // averageOrderValue: { $avg: "$totalAmount" },
+//             }
+//         }
+//     ]);
+    
+//     const { totalSales, totalRevenue } = salesData[0] || { totalSales: 0, totalRevenue: 0 };
+    
+//     // Get daily sales data for last 7 days
+//     const endDate = new Date();
+//     const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+//     const dailySalesData = await Order.aggregate([
+//         {
+//             $match: {
+//                 createdAt: {
+//                     $gte: startDate,
+//                     $lte: endDate
+//                 }
+//             }
+//         },
+//         {
+//             $group: {
+//                 _id: {
+//                     $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+//                 },
+//                 totalSales: { $sum: 1 },
+//                 totalRevenue: { $sum: "$totalAmount" }
+//             }
+//         },
+//         {
+//             $sort: { _id: 1 }
+//         }
+//     ]);
+    
+//     // Generate dates in range and map sales data
+//     const dates = [];
+//     let currentDate = new Date(startDate);
+//     while (currentDate <= endDate) {
+
+//             dates.push(new Date(currentDate));
+//             currentDate.setDate(currentDate.getDate() + 1);
+//         }
+
+   
+    
+//     res.json({
+//         analytics: {
+//             users: totalUser,
+//             products: totalProducts,
+//             totalSales,
+//             totalRevenue,
+//         },
+//         dailySales: dates,
+//     });
+// });

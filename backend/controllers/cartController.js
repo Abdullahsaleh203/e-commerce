@@ -1,8 +1,8 @@
 import asyncHandler from '../utils/asyncHandler.js';
 import AppError from '../utils/AppError.js';
-import Product from '../models/ProductModel.js';
+import Product from '../model/ProductModel.js';
 
-export const getCartProducts = asyncHandler(async (req, res, next) => {
+export const getCartProducts = asyncHandler(async (req, res) => {
     if (!req.user.cartItems || req.user.cartItems.length === 0) {
         return res.json([]);
     }
@@ -17,7 +17,7 @@ export const getCartProducts = asyncHandler(async (req, res, next) => {
 
 })
 
-export const addToCart = asyncHandler(async (req, res, next) => {
+export const addToCart = asyncHandler(async (req, res) => {
     const { ProductId } = req.body;
     const user = req.user;
     const existingItem = user.cartItems.find(item => item.ProductId.toString() === ProductId);
@@ -30,7 +30,7 @@ export const addToCart = asyncHandler(async (req, res, next) => {
     res.status(201).json(user.cartItems);
 })
 
-export const removeAllFromCart = asyncHandler(async (req, res, next) => {
+export const removeAllFromCart = asyncHandler(async (req, res) => {
     const { ProductId } = req.body;
     const user = req.user;
     if (!ProductId) {
