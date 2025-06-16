@@ -8,6 +8,7 @@ export const getCoupons = asyncHandler(async (req, res) => {
     res.status(200).json(coupons || null);
 });
 
+// Validate coupon code
 export const validateCoupon = asyncHandler(async (req, res, next) => {
     const { code } = req.body;
     const coupon = await Coupon.findOne({ code, userId: req.user._id, isActive: true });
