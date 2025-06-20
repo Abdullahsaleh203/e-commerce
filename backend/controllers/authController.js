@@ -86,6 +86,7 @@ export const login = asyncHandler(async (req, res, next) => {
     });
 })
 
+
 export const logout = asyncHandler(async (req, res, next) => {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
