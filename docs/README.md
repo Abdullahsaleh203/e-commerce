@@ -1,5 +1,6 @@
 # Documentation Index
 
+
 Welcome to the e-commerce platform documentation. This directory contains comprehensive guides for developers, administrators, and contributors.
 
 ## Documentation Structure
