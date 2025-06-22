@@ -141,6 +141,7 @@ export const refreshToken = asyncHandler(async (req, res, next) => {
 
 
 })
+
 // get profile
 export const getProfile = asyncHandler(async (req, res, next) => {
     const user = await User.findById(req.user._id);
