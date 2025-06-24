@@ -86,7 +86,6 @@ export const login = asyncHandler(async (req, res, next) => {
     });
 })
 
-
 export const logout = asyncHandler(async (req, res, next) => {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken) {
@@ -110,8 +109,6 @@ export const logout = asyncHandler(async (req, res, next) => {
         status: 'success',
         message: 'Logged out successfully'
     });
-
-
     
 })
 // refreshToken
@@ -141,8 +138,6 @@ export const refreshToken = asyncHandler(async (req, res, next) => {
 
 
 })
-
-
 
 // get profile
 export const getProfile = asyncHandler(async (req, res, next) => {
