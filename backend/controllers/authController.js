@@ -48,7 +48,6 @@ export const signup = asyncHandler(async (req, res) => {
     // Remove password from response
     const userObj = user.toObject();
     delete userObj.password;
-    // authenticate
     // Generate token
     const { accessToken, refreshToken } = generateTokens(user._id);
     // Store the refresh token in Redis or your preferred storage
