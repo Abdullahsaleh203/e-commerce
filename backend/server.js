@@ -14,7 +14,6 @@ import productsRoutes from './routes/productsRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
 import couponsRoutes from './routes/couponsRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
-import  from './routes/analyticsRoutes.js'
 
 
 const app = express();
