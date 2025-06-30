@@ -23,11 +23,10 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 // Set security HTTP headers
-
-
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
+
 
 // Body parser, reading data from body into req.body
 app.use(express.json({ limit: '10kb' }));
@@ -38,7 +37,6 @@ app.use(limiter);
 // Middleware to log requests
 
 // Development logging
-
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
