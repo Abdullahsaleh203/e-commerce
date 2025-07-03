@@ -1,35 +1,65 @@
-# E-Commerce Project
+# E-Commerce Platform
 
-A modern e-commerce platform built with Next.js, featuring a responsive design and comprehensive shopping experience.
+A full-stack e-commerce platform featuring a modern React frontend and robust Node.js backend API with comprehensive shopping functionality.
 
-## Features
+## 🚀 Features
 
+- 🛍️ **Product Management** - Browse, search, and filter products by category
+- 🛒 **Shopping Cart** - Add, update, remove items with persistent storage
+- 👤 **User Authentication** - Secure JWT-based authentication with refresh tokens
+- 💳 **Payment Processing** - Stripe integration for secure checkout
+- 🎟️ **Coupon System** - Discount codes and automatic coupon generation
+- 📊 **Analytics Dashboard** - Sales tracking and user metrics (Admin)
+- 📱 **Responsive Design** - Mobile-first design for all devices
+- � **Security** - Rate limiting, CORS, input validation, and secure headers
+- ☁️ **Cloud Storage** - Cloudinary integration for image management
+- � **Caching** - Redis caching for improved performance
 
-- 🛍️ Product browsing and searching
-- 🛒 Shopping cart functionality
-- 👤 User authentication and profiles
-- 💳 Secure payment processing
-- 📱 Responsive design for all devices
-- 🔍 Advanced product filtering and search
-- ⭐ Product reviews and ratings
-- 📦 Order tracking and management
+## 🛠 Tech Stack
 
-## Tech Stack
+### Backend
+- **Runtime**: Node.js
+- **Framework**: Express.js
+- **Database**: MongoDB with Mongoose ODM
+- **Cache**: Redis (Upstash)
+- **Authentication**: JWT with refresh tokens
+- **Payment**: Stripe API
+- **File Storage**: Cloudinary
+- **Security**: Helmet, Rate Limiting, CORS
 
-- **Frontend**: Next.js, React, Tailwind CSS
-- **Backend**: Node.js, Express
-- **Database**: MongoDB
-- **Authentication**: JWT
-- **Payment Processing**: Stripe
-- **Image Storage**: Cloudinary
+### Frontend
+- **Framework**: Next.js 14
+- **UI Library**: React 18
+- **Styling**: Tailwind CSS
+- **State Management**: Context API
+- **HTTP Client**: Fetch API
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the `/docs` folder:
+
+- **[API Authentication](./docs/API_AUTHENTICATION.md)** - JWT authentication, login/logout, token management
+- **[API Endpoints](./docs/API_ENDPOINTS.md)** - Complete API reference with examples
+- **[Database Models](./docs/DATABASE_MODELS.md)** - MongoDB schema definitions and relationships
+- **[Deployment Guide](./docs/DEPLOYMENT.md)** - Deploy to Heroku, Railway, AWS, and more
+
+### Quick Links
+
+| Documentation | Description |
+|---------------|-------------|
+| [Authentication](./docs/API_AUTHENTICATION.md) | User registration, login, JWT tokens |
+| [API Reference](./docs/API_ENDPOINTS.md) | All endpoints with request/response examples |
+| [Database Design](./docs/DATABASE_MODELS.md) | Schema definitions and relationships |
+| [Deployment](./docs/DEPLOYMENT.md) | Production deployment instructions |
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v14 or higher)
+- Node.js (v16 or higher)
 - npm or yarn
 - MongoDB
+- Redis
 - Stripe account (for payments)
 - Cloudinary account (for image storage)
 
