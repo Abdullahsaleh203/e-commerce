@@ -1,6 +1,6 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import AppError from "../utils/AppError.js";
-import Product from "../model/ProductModel.js";
+import Product from "../model/productModel.js";
 // import { redis } from "../utils/redis.js";
 import cloudinary from "../utils/cloudinary.js";
 // 
