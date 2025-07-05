@@ -1,11 +1,13 @@
-version:  '2.38.1'
+version: '3.8'
 
 services:
   app:
     container_name: express-node-app-container
     build: .
     volumes:
-      - ./backend:app/backend:ro
+      - ./backend:/app/backend:ro
     ports:
       - "8000:8000"
+    env_file:
+      - ./.env
 

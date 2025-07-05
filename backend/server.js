@@ -9,7 +9,7 @@ import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 // import mongoSanitize from 'express-mongo-sanitize';
 // import xss from 'xss';
-import  userRoutes  from './routes/userRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 import productsRoutes from './routes/productsRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
 import couponsRoutes from './routes/couponsRoutes.js';
@@ -72,7 +72,7 @@ mongoose.connect(DB)
 // app.use(xss());
 
 app.get('/', (req, res) => {
-  res.send('Hello World!');
+  res.send('<h1> Hello World! </h1> <h2>Welcome to the E-commerce API</h2>');
 });
 app.use('/api/v1/auth', userRoutes);
 app.use('/api/v1/products', productsRoutes);
@@ -84,3 +84,4 @@ app.use('/api/v1/analytics', analyticsRoutes);
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT} 🌐 `);
 });
+
