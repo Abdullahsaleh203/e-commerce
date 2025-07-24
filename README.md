@@ -1,6 +1,6 @@
 # E-Commerce Platform
 
-A full-stack e-commerce platform featuring a modern React frontend and robust Node.js backend API with comprehensive shopping functionality.
+A Full-stack e-commerce platform featuring a modern React frontend and robust Node.js backend API with comprehensive shopping functionality.
 
 ## 🚀 Features
 
