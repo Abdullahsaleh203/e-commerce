@@ -125,6 +125,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact
 
-Your Name - [@yourtwitter](https://twitter.com/abdallahsaleh25) - 
+Your Name - [@Abdallah Saleh](https://twitter.com/abdallahsaleh25) - 
 
 Project Link: [https://github.com/abdullahsaleh203/e-commerce](https://github.com/abdullahsaleh203/e-commerce)
