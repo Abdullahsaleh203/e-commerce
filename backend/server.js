@@ -1,5 +1,5 @@
 
- express from 'express';
+import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
@@ -14,7 +14,8 @@ import productsRoutes from './routes/productsRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
 import couponsRoutes from './routes/couponsRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
-import  from './routes/analyticsRoutes.js'
+import analyticsRoutes from './routes/analyticsRoutes.js'
+import { specs, swaggerUi } from './config/swagger.js';
 
 
 const app = express();
@@ -73,8 +74,15 @@ mongoose.connect(DB)
 // Data sanitization against XSS
 // app.use(xss());
 
+// Swagger UI setup
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'E-Commerce API Documentation'
+}));
+
 app.get('/', (req, res) => {
-  res.send('Hello World!');
+  res.send('Hello World! Visit <a href="/api-docs">/api-docs</a> for API documentation.');
 });
 app.use('/api/v1/auth', userRoutes);
 app.use('/api/v1/products', productsRoutes);

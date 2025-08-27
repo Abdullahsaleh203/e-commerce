@@ -1,0 +1,71 @@
+import React from 'react';
+import { cn } from '@/lib/utils';
+
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  error?: string;
+  helperText?: string;
+  startIcon?: React.ReactNode;
+  endIcon?: React.ReactNode;
+}
+
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, label, error, helperText, startIcon, endIcon, type = 'text', ...props }, ref) => {
+    return (
+      <div className="w-full">
+        {label && (
+          <label 
+            htmlFor={props.id || props.name} 
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            {label}
+          </label>
+        )}
+        
+        <div className="relative">
+          {startIcon && (
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="text-gray-400 text-sm">
+                {startIcon}
+              </div>
+            </div>
+          )}
+          
+          <input
+            type={type}
+            className={cn(
+              'flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+              startIcon && 'pl-10',
+              endIcon && 'pr-10',
+              error && 'border-red-500 focus:border-red-500 focus:ring-red-500',
+              className
+            )}
+            ref={ref}
+            {...props}
+          />
+          
+          {endIcon && (
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+              <div className="text-gray-400 text-sm">
+                {endIcon}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {(error || helperText) && (
+          <p className={cn(
+            'mt-1 text-sm',
+            error ? 'text-red-600' : 'text-gray-500'
+          )}>
+            {error || helperText}
+          </p>
+        )}
+      </div>
+    );
+  }
+);
+
+Input.displayName = 'Input';
+
+export { Input };
