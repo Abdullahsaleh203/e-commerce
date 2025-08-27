@@ -48,7 +48,6 @@ export const signup = asyncHandler(async (req, res) => {
     // Remove password from response
     const userObj = user.toObject();
     delete userObj.password;
-    // authenticate
     // Generate token
     const { accessToken, refreshToken } = generateTokens(user._id);
     // Store the refresh token in Redis or your preferred storage
@@ -109,8 +108,7 @@ export const logout = asyncHandler(async (req, res, next) => {
         status: 'success',
         message: 'Logged out successfully'
     });
-
-
+    
 })
 // refreshToken
 export const refreshToken = asyncHandler(async (req, res, next) => {
@@ -139,6 +137,7 @@ export const refreshToken = asyncHandler(async (req, res, next) => {
 
 
 })
+
 // get profile
 export const getProfile = asyncHandler(async (req, res, next) => {
     const user = await User.findById(req.user._id);

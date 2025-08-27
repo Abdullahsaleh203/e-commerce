@@ -2,6 +2,7 @@ import asyncHandler from '../utils/asyncHandler.js';
 import AppError from '../utils/AppError.js';
 import Product from '../model/ProductModel.js';
 
+
 export const getCartProducts = asyncHandler(async (req, res) => {
     if (!req.user.cartItems || req.user.cartItems.length === 0) {
         return res.json([]);
