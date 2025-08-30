@@ -1,187 +1,158 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-// Utility function to merge Tailwind classes
+/**
+ * Combines class names using clsx and tailwind-merge
+ */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// Format currency
-export function formatCurrency(amount: number, currency: string = 'USD'): string {
+/**
+ * Format currency values
+ */
+export function formatCurrency(amount: number, currency = 'USD'): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: currency,
+    currency,
   }).format(amount);
 }
 
-// Format date
+/**
+ * Format date values
+ */
 export function formatDate(date: string | Date, options?: Intl.DateTimeFormatOptions): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
   const defaultOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
-    month: 'short',
+    month: 'long',
     day: 'numeric',
   };
 
-  return new Intl.DateTimeFormat('en-US', { ...defaultOptions, ...options }).format(
-    new Date(date)
-  );
+  return new Intl.DateTimeFormat('en-US', { ...defaultOptions, ...options }).format(dateObj);
 }
 
-// Format relative time
+/**
+ * Format relative time (e.g., "2 hours ago")
+ */
 export function formatRelativeTime(date: string | Date): string {
-  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
-  const target = new Date(date);
-  const diffInMs = target.getTime() - now.getTime();
-  const diffInDays = Math.ceil(diffInMs / (1000 * 60 * 60 * 24));
+  const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
 
-  if (Math.abs(diffInDays) < 1) {
-    const diffInHours = Math.ceil(diffInMs / (1000 * 60 * 60));
-    if (Math.abs(diffInHours) < 1) {
-      const diffInMinutes = Math.ceil(diffInMs / (1000 * 60));
-      return rtf.format(diffInMinutes, 'minute');
-    }
-    return rtf.format(diffInHours, 'hour');
+  if (diffInSeconds < 60) {
+    return 'Just now';
   }
 
-  if (Math.abs(diffInDays) < 7) {
-    return rtf.format(diffInDays, 'day');
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
   }
 
-  if (Math.abs(diffInDays) < 30) {
-    const diffInWeeks = Math.ceil(diffInDays / 7);
-    return rtf.format(diffInWeeks, 'week');
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
   }
 
-  const diffInMonths = Math.ceil(diffInDays / 30);
-  return rtf.format(diffInMonths, 'month');
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) {
+    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+  }
+
+  return formatDate(dateObj);
 }
 
-// Truncate text
+/**
+ * Debounce function
+ */
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  let timeoutId: NodeJS.Timeout;
+  
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
+}
+
+/**
+ * Throttle function
+ */
+export function throttle<T extends (...args: any[]) => any>(
+  func: T,
+  delay: number
+): (...args: Parameters<T>) => void {
+  let lastCall = 0;
+  
+  return (...args: Parameters<T>) => {
+    const now = new Date().getTime();
+    if (now - lastCall < delay) {
+      return;
+    }
+    lastCall = now;
+    func(...args);
+  };
+}
+
+/**
+ * Generate a random ID
+ */
+export function generateId(): string {
+  return Math.random().toString(36).substr(2, 9);
+}
+
+/**
+ * Capitalize first letter of a string
+ */
+export function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * Truncate text to a specified length
+ */
 export function truncateText(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength) + '...';
 }
 
-// Generate slug from string
-export function generateSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+/**
+ * Calculate percentage
+ */
+export function calculatePercentage(value: number, total: number): number {
+  if (total === 0) return 0;
+  return Math.round((value / total) * 100);
 }
 
-// Debounce function
-export function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout;
-
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
-
-// Throttle function
-export function throttle<T extends (...args: any[]) => any>(
-  func: T,
-  limit: number
-): (...args: Parameters<T>) => void {
-  let inThrottle: boolean;
-
-  return (...args: Parameters<T>) => {
-    if (!inThrottle) {
-      func(...args);
-      inThrottle = true;
-      setTimeout(() => (inThrottle = false), limit);
-    }
-  };
-}
-
-// Validate email
+/**
+ * Check if a value is a valid email
+ */
 export function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
 
-// Validate password strength
-export function validatePassword(password: string): {
-  isValid: boolean;
-  errors: string[];
-} {
-  const errors: string[] = [];
-
-  if (password.length < 12) {
-    errors.push('Password must be at least 12 characters long');
-  }
-
-  if (!/[a-z]/.test(password)) {
-    errors.push('Password must contain at least one lowercase letter');
-  }
-
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Password must contain at least one uppercase letter');
-  }
-
-  if (!/\d/.test(password)) {
-    errors.push('Password must contain at least one number');
-  }
-
-  if (!/[@$!%*?&]/.test(password)) {
-    errors.push('Password must contain at least one special character (@$!%*?&)');
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
+/**
+ * Generate star rating array
+ */
+export function generateStarRating(rating: number, maxRating = 5): boolean[] {
+  return Array.from({ length: maxRating }, (_, index) => index < rating);
 }
 
-// Calculate discount
-export function calculateDiscount(originalPrice: number, discountPercentage: number): number {
-  return originalPrice * (discountPercentage / 100);
+/**
+ * Calculate discount percentage
+ */
+export function calculateDiscount(originalPrice: number, discountedPrice: number): number {
+  if (originalPrice <= 0) return 0;
+  return Math.round(((originalPrice - discountedPrice) / originalPrice) * 100);
 }
 
-// Calculate final price after discount
-export function calculateDiscountedPrice(originalPrice: number, discountPercentage: number): number {
-  const discount = calculateDiscount(originalPrice, discountPercentage);
-  return originalPrice - discount;
-}
-
-// Generate random ID
-export function generateId(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
-}
-
-// Check if value is empty
-export function isEmpty(value: any): boolean {
-  if (value === null || value === undefined) return true;
-  if (typeof value === 'string') return value.trim().length === 0;
-  if (Array.isArray(value)) return value.length === 0;
-  if (typeof value === 'object') return Object.keys(value).length === 0;
-  return false;
-}
-
-// Deep clone object
-export function deepClone<T>(obj: T): T {
-  if (obj === null || typeof obj !== 'object') return obj;
-  if (obj instanceof Date) return new Date(obj.getTime()) as any;
-  if (obj instanceof Array) return obj.map(item => deepClone(item)) as any;
-  
-  const cloned = {} as any;
-  for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      cloned[key] = deepClone(obj[key]);
-    }
-  }
-  
-  return cloned;
-}
-
-// Format file size
+/**
+ * Format file size
+ */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
   
@@ -192,23 +163,106 @@ export function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// Get initials from name
-export function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map(word => word.charAt(0))
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+/**
+ * Convert string to slug
+ */
+export function slugify(text: string): string {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
 }
 
-// Generate color from string (for avatars)
-export function generateColorFromString(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+/**
+ * Parse URL search params
+ */
+export function parseSearchParams(searchParams: URLSearchParams): Record<string, string> {
+  const params: Record<string, string> = {};
+  
+  for (const [key, value] of searchParams.entries()) {
+    params[key] = value;
   }
   
-  const hue = hash % 360;
-  return `hsl(${hue}, 70%, 50%)`;
+  return params;
+}
+
+/**
+ * Create URL with search params
+ */
+export function createUrlWithParams(base: string, params: Record<string, string | number | boolean>): string {
+  const url = new URL(base, window.location.origin);
+  
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      url.searchParams.set(key, String(value));
+    }
+  });
+  
+  return url.pathname + url.search;
+}
+
+/**
+ * Copy text to clipboard
+ */
+export async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (error) {
+    console.error('Failed to copy to clipboard:', error);
+    return false;
+  }
+}
+
+/**
+ * Validate password strength
+ */
+export function validatePasswordStrength(password: string): {
+  isValid: boolean;
+  score: number;
+  feedback: string[];
+} {
+  const feedback: string[] = [];
+  let score = 0;
+
+  if (password.length >= 8) {
+    score += 1;
+  } else {
+    feedback.push('Password must be at least 8 characters long');
+  }
+
+  if (/[a-z]/.test(password)) {
+    score += 1;
+  } else {
+    feedback.push('Password must contain at least one lowercase letter');
+  }
+
+  if (/[A-Z]/.test(password)) {
+    score += 1;
+  } else {
+    feedback.push('Password must contain at least one uppercase letter');
+  }
+
+  if (/\d/.test(password)) {
+    score += 1;
+  } else {
+    feedback.push('Password must contain at least one number');
+  }
+
+  if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    score += 1;
+  } else {
+    feedback.push('Password must contain at least one special character');
+  }
+
+  return {
+    isValid: score >= 4,
+    score,
+    feedback,
+  };
 }

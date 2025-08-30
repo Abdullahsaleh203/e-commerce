@@ -5,38 +5,37 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   label?: string;
   error?: string;
   helperText?: string;
-  startIcon?: React.ReactNode;
-  endIcon?: React.ReactNode;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, helperText, startIcon, endIcon, type = 'text', ...props }, ref) => {
+  ({ className, type, label, error, helperText, leftIcon, rightIcon, id, ...props }, ref) => {
+    const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+
     return (
       <div className="w-full">
         {label && (
-          <label 
-            htmlFor={props.id || props.name} 
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
+          <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-2">
             {label}
+            {props.required && <span className="text-red-500 ml-1">*</span>}
           </label>
         )}
         
         <div className="relative">
-          {startIcon && (
+          {leftIcon && (
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <div className="text-gray-400 text-sm">
-                {startIcon}
-              </div>
+              <div className="h-5 w-5 text-gray-400">{leftIcon}</div>
             </div>
           )}
           
           <input
             type={type}
+            id={inputId}
             className={cn(
-              'flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-              startIcon && 'pl-10',
-              endIcon && 'pr-10',
+              'flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+              leftIcon && 'pl-10',
+              rightIcon && 'pr-10',
               error && 'border-red-500 focus:border-red-500 focus:ring-red-500',
               className
             )}
@@ -44,22 +43,19 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           
-          {endIcon && (
+          {rightIcon && (
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <div className="text-gray-400 text-sm">
-                {endIcon}
-              </div>
+              <div className="h-5 w-5 text-gray-400">{rightIcon}</div>
             </div>
           )}
         </div>
         
-        {(error || helperText) && (
-          <p className={cn(
-            'mt-1 text-sm',
-            error ? 'text-red-600' : 'text-gray-500'
-          )}>
-            {error || helperText}
-          </p>
+        {error && (
+          <p className="mt-1 text-sm text-red-600">{error}</p>
+        )}
+        
+        {helperText && !error && (
+          <p className="mt-1 text-sm text-gray-500">{helperText}</p>
         )}
       </div>
     );

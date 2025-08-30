@@ -1,23 +1,148 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import Cookies from 'js-cookie';
-import { AuthService } from '@/lib/api';
-import { User, LoginCredentials, SignupCredentials } from '@/types';
-import toast from 'react-hot-toast';
-
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  signup: (credentials: SignupCredentials) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
-  isAuthenticated: boolean;
-  isAdmin: boolean;
-}
+import { toast } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
+import { api } from '@/lib/api';
+import { apiClient } from '@/lib/api-client';
+import type { User, LoginCredentials, SignupCredentials, AuthContextType } from '@/types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export function AuthProvider({ children }: AuthProviderProps) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    initializeAuth();
+  }, []);
+
+  const initializeAuth = async () => {
+    try {
+      const token = apiClient.getAuthToken();
+      if (token) {
+        await loadUserProfile();
+      }
+    } catch (error) {
+      console.error('Failed to initialize auth:', error);
+      apiClient.removeAuthToken();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadUserProfile = async () => {
+    try {
+      const response = await api.auth.getProfile();
+      if (response.status === 'success' && response.data?.user) {
+        setUser(response.data.user);
+      }
+    } catch (error) {
+      console.error('Failed to load user profile:', error);
+      apiClient.removeAuthToken();
+      setUser(null);
+    }
+  };
+
+  const login = async (credentials: LoginCredentials) => {
+    try {
+      setIsLoading(true);
+      const response = await api.auth.login(credentials);
+      
+      if (response.status === 'success' && response.token && response.user) {
+        apiClient.setAuthToken(response.token);
+        setUser(response.user);
+        toast.success('Logged in successfully!');
+        router.push('/');
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (error: any) {
+      console.error('Login failed:', error);
+      const message = error.response?.data?.message || 'Login failed. Please try again.';
+      toast.error(message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signup = async (credentials: SignupCredentials) => {
+    try {
+      setIsLoading(true);
+      const response = await api.auth.signup(credentials);
+      
+      if (response.status === 'success' && response.token && response.user) {
+        apiClient.setAuthToken(response.token);
+        setUser(response.user);
+        toast.success('Account created successfully!');
+        router.push('/');
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (error: any) {
+      console.error('Signup failed:', error);
+      const message = error.response?.data?.message || 'Signup failed. Please try again.';
+      toast.error(message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await api.auth.logout();
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+    } finally {
+      apiClient.removeAuthToken();
+      setUser(null);
+      toast.success('Logged out successfully!');
+      router.push('/auth/login');
+    }
+  };
+
+  const refreshToken = async () => {
+    try {
+      const response = await api.auth.refreshToken();
+      
+      if (response.status === 'success' && response.token && response.user) {
+        apiClient.setAuthToken(response.token);
+        setUser(response.user);
+        return;
+      } else {
+        throw new Error('Invalid response format');
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      apiClient.removeAuthToken();
+      setUser(null);
+      router.push('/auth/login');
+      throw error;
+    }
+  };
+
+  const value: AuthContextType = {
+    user,
+    isLoading,
+    login,
+    signup,
+    logout,
+    refreshToken,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
 
 export function useAuth() {
   const context = useContext(AuthContext);
@@ -27,121 +152,60 @@ export function useAuth() {
   return context;
 }
 
-interface AuthProviderProps {
-  children: ReactNode;
+// Higher-order component for protecting routes
+export function withAuth<P extends object>(
+  WrappedComponent: React.ComponentType<P>,
+  options: { requireAuth?: boolean; requireAdmin?: boolean; redirectTo?: string } = {}
+) {
+  const { requireAuth = true, requireAdmin = false, redirectTo = '/auth/login' } = options;
+
+  return function AuthenticatedComponent(props: P) {
+    const { user, isLoading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+      if (!isLoading) {
+        if (requireAuth && !user) {
+          router.push(redirectTo);
+          return;
+        }
+
+        if (requireAdmin && user?.role !== 'admin') {
+          router.push('/');
+          toast.error('Access denied. Admin privileges required.');
+          return;
+        }
+      }
+    }, [user, isLoading, router]);
+
+    if (isLoading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        </div>
+      );
+    }
+
+    if (requireAuth && !user) {
+      return null;
+    }
+
+    if (requireAdmin && user?.role !== 'admin') {
+      return null;
+    }
+
+    return <WrappedComponent {...props} />;
+  };
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // Check if user is authenticated
-  const isAuthenticated = !!user;
-  const isAdmin = user?.role === 'admin';
-
-  // Initialize auth state
-  useEffect(() => {
-    initializeAuth();
-  }, []);
-
-  const initializeAuth = async () => {
-    try {
-      const token = Cookies.get('token');
-      if (token) {
-        const userData = await AuthService.getProfile();
-        setUser(userData.user);
-      }
-    } catch (error) {
-      // Token might be expired or invalid
-      Cookies.remove('token');
-      console.error('Failed to initialize auth:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const login = async (credentials: LoginCredentials) => {
-    try {
-      setLoading(true);
-      const response = await AuthService.login(credentials);
-      
-      if (response.token) {
-        Cookies.set('token', response.token, { 
-          expires: 7, // 7 days
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict'
-        });
-      }
-      
-      setUser(response.user);
-      toast.success('Successfully logged in!');
-    } catch (error: any) {
-      toast.error(error.message || 'Login failed');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const signup = async (credentials: SignupCredentials) => {
-    try {
-      setLoading(true);
-      const response = await AuthService.signup(credentials);
-      
-      if (response.token) {
-        Cookies.set('token', response.token, { 
-          expires: 7, // 7 days
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict'
-        });
-      }
-      
-      setUser(response.user);
-      toast.success('Account created successfully!');
-    } catch (error: any) {
-      toast.error(error.message || 'Signup failed');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const logout = async () => {
-    try {
-      setLoading(true);
-      await AuthService.logout();
-    } catch (error) {
-      // Continue with logout even if API call fails
-      console.error('Logout API call failed:', error);
-    } finally {
-      Cookies.remove('token');
-      setUser(null);
-      setLoading(false);
-      toast.success('Successfully logged out!');
-    }
-  };
-
-  const refreshProfile = async () => {
-    try {
-      const userData = await AuthService.getProfile();
-      setUser(userData.user);
-    } catch (error) {
-      console.error('Failed to refresh profile:', error);
-      // If profile refresh fails, user might need to login again
-      await logout();
-    }
-  };
-
-  const value = {
+// Hook for checking auth status
+export function useAuthStatus() {
+  const { user, isLoading } = useAuth();
+  
+  return {
+    isAuthenticated: !!user,
+    isAdmin: user?.role === 'admin',
+    isLoading,
     user,
-    loading,
-    login,
-    signup,
-    logout,
-    refreshProfile,
-    isAuthenticated,
-    isAdmin,
   };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

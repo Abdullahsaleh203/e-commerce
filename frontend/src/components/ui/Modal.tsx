@@ -7,31 +7,38 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './Button';
 
-export interface ModalProps {
+interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  children: React.ReactNode;
   title?: string;
+  children: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   showCloseButton?: boolean;
   closeOnOverlayClick?: boolean;
   className?: string;
 }
 
-const Modal: React.FC<ModalProps> = ({
+const sizeClasses = {
+  sm: 'max-w-md',
+  md: 'max-w-lg',
+  lg: 'max-w-2xl',
+  xl: 'max-w-4xl',
+  full: 'max-w-full mx-4',
+};
+
+export function Modal({
   isOpen,
   onClose,
-  children,
   title,
+  children,
   size = 'md',
   showCloseButton = true,
   closeOnOverlayClick = true,
   className,
-}) => {
-  // Close modal on escape key
+}: ModalProps) {
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isOpen) {
+      if (event.key === 'Escape') {
         onClose();
       }
     };
@@ -39,8 +46,6 @@ const Modal: React.FC<ModalProps> = ({
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
     }
 
     return () => {
@@ -49,15 +54,9 @@ const Modal: React.FC<ModalProps> = ({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
-
-  const sizeClasses = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    full: 'max-w-full m-4',
-  };
+  if (typeof window === 'undefined') {
+    return null;
+  }
 
   const modalContent = (
     <AnimatePresence>
@@ -68,8 +67,8 @@ const Modal: React.FC<ModalProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black bg-opacity-50"
             onClick={closeOnOverlayClick ? onClose : undefined}
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
           />
 
           {/* Modal */}
@@ -77,9 +76,8 @@ const Modal: React.FC<ModalProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: 'spring', duration: 0.3 }}
             className={cn(
-              'relative z-10 w-full mx-4 bg-white rounded-2xl shadow-2xl',
+              'relative bg-white rounded-lg shadow-xl w-full',
               sizeClasses[size],
               className
             )}
@@ -98,17 +96,14 @@ const Modal: React.FC<ModalProps> = ({
                     onClick={onClose}
                     className="text-gray-400 hover:text-gray-600"
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-4 w-4" />
                   </Button>
                 )}
               </div>
             )}
 
             {/* Content */}
-            <div className={cn(
-              'p-6',
-              (title || showCloseButton) && 'pt-0'
-            )}>
+            <div className="p-6">
               {children}
             </div>
           </motion.div>
@@ -117,12 +112,50 @@ const Modal: React.FC<ModalProps> = ({
     </AnimatePresence>
   );
 
-  // Render modal in portal
-  if (typeof window !== 'undefined') {
-    return createPortal(modalContent, document.body);
-  }
+  return createPortal(modalContent, document.body);
+}
 
-  return null;
-};
+// Convenience components for common modal patterns
+interface ConfirmModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  isDestructive?: boolean;
+  isLoading?: boolean;
+}
 
-export { Modal };
+export function ConfirmModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText = 'Confirm',
+  cancelText = 'Cancel',
+  isDestructive = false,
+  isLoading = false,
+}: ConfirmModalProps) {
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
+      <div className="space-y-4">
+        <p className="text-gray-600">{message}</p>
+        <div className="flex justify-end space-x-3">
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+            {cancelText}
+          </Button>
+          <Button
+            variant={isDestructive ? 'destructive' : 'default'}
+            onClick={onConfirm}
+            loading={isLoading}
+          >
+            {confirmText}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}

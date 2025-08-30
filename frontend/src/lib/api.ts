@@ -1,186 +1,187 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import Cookies from 'js-cookie';
-import { ApiResponse, ApiError } from '@/types';
+import { apiClient } from './api-client';
+import type {
+  User,
+  AuthResponse,
+  LoginCredentials,
+  SignupCredentials,
+  Product,
+  ProductCreate,
+  CartItem,
+  AddToCartRequest,
+  UpdateQuantityRequest,
+  Order,
+  Coupon,
+  ValidateCouponRequest,
+  CheckoutSessionRequest,
+  CheckoutSuccessRequest,
+  Analytics,
+  ApiResponse,
+  ProductFilters,
+} from '@/types';
 
-class ApiClient {
-  private client: AxiosInstance;
+// Authentication API
+export const authApi = {
+  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
+    const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
+    return response;
+  },
 
-  constructor() {
-    this.client = axios.create({
-      baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1',
-      timeout: 10000,
-      withCredentials: true,
+  signup: async (credentials: SignupCredentials): Promise<AuthResponse> => {
+    const response = await apiClient.post<AuthResponse>('/auth/signup', credentials);
+    return response;
+  },
+
+  logout: async (): Promise<void> => {
+    await apiClient.get('/auth/logout');
+  },
+
+  getProfile: async (): Promise<ApiResponse<{ user: User }>> => {
+    const response = await apiClient.get<ApiResponse<{ user: User }>>('/auth/profile');
+    return response;
+  },
+
+  refreshToken: async (): Promise<AuthResponse> => {
+    const response = await apiClient.post<AuthResponse>('/auth/refresh-token');
+    return response;
+  },
+};
+
+// Products API
+export const productsApi = {
+  getAllProducts: async (): Promise<ApiResponse<{ products: Product[] }>> => {
+    const response = await apiClient.get<ApiResponse<{ products: Product[] }>>('/products');
+    return response;
+  },
+
+  getFeaturedProducts: async (): Promise<ApiResponse<{ products: Product[] }>> => {
+    const response = await apiClient.get<ApiResponse<{ products: Product[] }>>('/products/featured');
+    return response;
+  },
+
+  getProductsByCategory: async (category: string): Promise<ApiResponse<{ products: Product[] }>> => {
+    const response = await apiClient.get<ApiResponse<{ products: Product[] }>>(`/products/category/${category}`);
+    return response;
+  },
+
+  getRecommendedProducts: async (): Promise<ApiResponse<{ products: Product[] }>> => {
+    const response = await apiClient.get<ApiResponse<{ products: Product[] }>>('/products/recommendations');
+    return response;
+  },
+
+  createProduct: async (product: ProductCreate): Promise<ApiResponse<{ product: Product }>> => {
+    const response = await apiClient.post<ApiResponse<{ product: Product }>>('/products', product);
+    return response;
+  },
+
+  updateProduct: async (id: string, updates: Partial<ProductCreate>): Promise<ApiResponse<{ product: Product }>> => {
+    const response = await apiClient.patch<ApiResponse<{ product: Product }>>(`/products/${id}`, updates);
+    return response;
+  },
+
+  toggleFeaturedProduct: async (id: string): Promise<ApiResponse<{ product: Product }>> => {
+    const response = await apiClient.patch<ApiResponse<{ product: Product }>>(`/products/${id}`);
+    return response;
+  },
+
+  deleteProduct: async (id: string): Promise<ApiResponse> => {
+    const response = await apiClient.delete<ApiResponse>(`/products/${id}`);
+    return response;
+  },
+
+  searchProducts: async (filters: ProductFilters): Promise<ApiResponse<{ products: Product[] }>> => {
+    const params = new URLSearchParams();
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value));
+      }
     });
 
-    this.setupInterceptors();
-  }
+    const queryString = params.toString();
+    const url = queryString ? `/products?${queryString}` : '/products';
+    
+    const response = await apiClient.get<ApiResponse<{ products: Product[] }>>url);
+    return response;
+  },
+};
 
-  private setupInterceptors() {
-    // Request interceptor
-    this.client.interceptors.request.use(
-      (config) => {
-        const token = Cookies.get('token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
-      }
-    );
+// Cart API
+export const cartApi = {
+  getCartProducts: async (): Promise<ApiResponse<{ cartItems: CartItem[] }>> => {
+    const response = await apiClient.get<ApiResponse<{ cartItems: CartItem[] }>>('/cart');
+    return response;
+  },
 
-    // Response interceptor
-    this.client.interceptors.response.use(
-      (response: AxiosResponse<ApiResponse>) => {
-        return response;
-      },
-      (error) => {
-        const apiError: ApiError = {
-          status: 'error',
-          message: error.response?.data?.message || error.message || 'An unexpected error occurred',
-        };
+  addToCart: async (request: AddToCartRequest): Promise<ApiResponse<{ cartItems: CartItem[] }>> => {
+    const response = await apiClient.post<ApiResponse<{ cartItems: CartItem[] }>>('/cart', request);
+    return response;
+  },
 
-        // Handle specific error cases
-        if (error.response?.status === 401) {
-          // Unauthorized - clear token and redirect to login
-          Cookies.remove('token');
-          window.location.href = '/auth/login';
-        }
+  updateQuantity: async (productId: string, request: UpdateQuantityRequest): Promise<ApiResponse<{ cartItems: CartItem[] }>> => {
+    const response = await apiClient.put<ApiResponse<{ cartItems: CartItem[] }>>(`/cart/${productId}`, request);
+    return response;
+  },
 
-        return Promise.reject(apiError);
-      }
-    );
-  }
+  removeAllFromCart: async (): Promise<ApiResponse> => {
+    const response = await apiClient.delete<ApiResponse>('/cart');
+    return response;
+  },
+};
 
-  // Generic request method
-  private async request<T>(config: AxiosRequestConfig): Promise<T> {
-    try {
-      const response = await this.client.request<ApiResponse<T>>(config);
-      return response.data.data || response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
+// Payment API
+export const paymentApi = {
+  createCheckoutSession: async (request: CheckoutSessionRequest): Promise<ApiResponse<{ sessionId: string; url: string }>> => {
+    const response = await apiClient.post<ApiResponse<{ sessionId: string; url: string }>>('/payment/create-checkout-session', request);
+    return response;
+  },
 
-  // HTTP methods
-  async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: 'GET', url });
-  }
+  checkoutSuccess: async (request: CheckoutSuccessRequest): Promise<ApiResponse<{ order: Order }>> => {
+    const response = await apiClient.post<ApiResponse<{ order: Order }>>('/payment/checkout-success', request);
+    return response;
+  },
+};
 
-  async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: 'POST', url, data });
-  }
+// Coupons API
+export const couponsApi = {
+  getCoupons: async (): Promise<ApiResponse<{ coupons: Coupon[] }>> => {
+    const response = await apiClient.get<ApiResponse<{ coupons: Coupon[] }>>('/coupons');
+    return response;
+  },
 
-  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: 'PUT', url, data });
-  }
+  validateCoupon: async (request: ValidateCouponRequest): Promise<ApiResponse<{ coupon: Coupon; discountAmount: number }>> => {
+    const response = await apiClient.post<ApiResponse<{ coupon: Coupon; discountAmount: number }>>('/coupons/validate', request);
+    return response;
+  },
+};
 
-  async patch<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: 'PATCH', url, data });
-  }
+// Analytics API
+export const analyticsApi = {
+  getAnalytics: async (): Promise<ApiResponse<{ analytics: Analytics }>> => {
+    const response = await apiClient.get<ApiResponse<{ analytics: Analytics }>>('/analytics');
+    return response;
+  },
+};
 
-  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: 'DELETE', url });
-  }
-}
+// Orders API (if needed for order history)
+export const ordersApi = {
+  getUserOrders: async (): Promise<ApiResponse<{ orders: Order[] }>> => {
+    const response = await apiClient.get<ApiResponse<{ orders: Order[] }>>('/orders');
+    return response;
+  },
 
-// Create and export a singleton instance
-export const apiClient = new ApiClient();
+  getOrderById: async (id: string): Promise<ApiResponse<{ order: Order }>> => {
+    const response = await apiClient.get<ApiResponse<{ order: Order }>>(`/orders/${id}`);
+    return response;
+  },
+};
 
-// API service classes
-export class AuthService {
-  static async login(credentials: { email: string; password: string }) {
-    return apiClient.post('/auth/login', credentials);
-  }
-
-  static async signup(credentials: { username: string; email: string; password: string }) {
-    return apiClient.post('/auth/signup', credentials);
-  }
-
-  static async logout() {
-    return apiClient.get('/auth/logout');
-  }
-
-  static async getProfile() {
-    return apiClient.get('/auth/profile');
-  }
-
-  static async refreshToken() {
-    return apiClient.post('/auth/refresh-token');
-  }
-}
-
-export class ProductService {
-  static async getAllProducts() {
-    return apiClient.get('/products');
-  }
-
-  static async getFeaturedProducts() {
-    return apiClient.get('/products/featured');
-  }
-
-  static async getProductsByCategory(category: string) {
-    return apiClient.get(`/products/category/${category}`);
-  }
-
-  static async getRecommendedProducts() {
-    return apiClient.get('/products/recommendations');
-  }
-
-  static async createProduct(product: any) {
-    return apiClient.post('/products', product);
-  }
-
-  static async toggleFeaturedProduct(id: string) {
-    return apiClient.patch(`/products/${id}`);
-  }
-
-  static async deleteProduct(id: string) {
-    return apiClient.delete(`/products/${id}`);
-  }
-}
-
-export class CartService {
-  static async getCartProducts() {
-    return apiClient.get('/cart');
-  }
-
-  static async addToCart(productId: string, quantity: number = 1) {
-    return apiClient.post('/cart', { productId, quantity });
-  }
-
-  static async updateQuantity(productId: string, quantity: number) {
-    return apiClient.put(`/cart/${productId}`, { quantity });
-  }
-
-  static async removeAllFromCart() {
-    return apiClient.delete('/cart');
-  }
-}
-
-export class PaymentService {
-  static async createCheckoutSession(data: any) {
-    return apiClient.post('/payment/create-checkout-session', data);
-  }
-
-  static async checkoutSuccess(sessionId: string) {
-    return apiClient.post('/payment/checkout-success', { sessionId });
-  }
-}
-
-export class CouponService {
-  static async getCoupons() {
-    return apiClient.get('/coupons');
-  }
-
-  static async validateCoupon(code: string) {
-    return apiClient.post('/coupons/validate', { code });
-  }
-}
-
-export class AnalyticsService {
-  static async getAnalytics() {
-    return apiClient.get('/analytics');
-  }
-}
+// Export all APIs
+export const api = {
+  auth: authApi,
+  products: productsApi,
+  cart: cartApi,
+  payment: paymentApi,
+  coupons: couponsApi,
+  analytics: analyticsApi,
+  orders: ordersApi,
+};

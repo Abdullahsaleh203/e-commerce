@@ -1,4 +1,4 @@
-// User types
+// User related types
 export interface User {
   _id: string;
   username: string;
@@ -7,6 +7,12 @@ export interface User {
   cartItems: CartItem[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AuthResponse {
+  status: string;
+  token: string;
+  user: User;
 }
 
 export interface LoginCredentials {
@@ -20,13 +26,7 @@ export interface SignupCredentials {
   password: string;
 }
 
-export interface AuthResponse {
-  status: string;
-  token?: string;
-  user: User;
-}
-
-// Product types
+// Product related types
 export interface Product {
   _id: string;
   name: string;
@@ -53,7 +53,7 @@ export interface ProductCreate {
   isFeatured?: boolean;
 }
 
-// Cart types
+// Cart related types
 export interface CartItem {
   product: Product | string;
   quantity: number;
@@ -68,12 +68,12 @@ export interface UpdateQuantityRequest {
   quantity: number;
 }
 
-// Order types
+// Order related types
 export interface Order {
   _id: string;
   user: string;
   products: {
-    product: Product | string;
+    product: string | Product;
     quantity: number;
     price: number;
   }[];
@@ -83,7 +83,7 @@ export interface Order {
   updatedAt: string;
 }
 
-// Coupon types
+// Coupon related types
 export interface Coupon {
   _id: string;
   code: string;
@@ -99,8 +99,8 @@ export interface ValidateCouponRequest {
   code: string;
 }
 
-// Payment types
-export interface CheckoutSession {
+// Payment related types
+export interface CheckoutSessionRequest {
   products: {
     product: string;
     quantity: number;
@@ -108,7 +108,7 @@ export interface CheckoutSession {
   couponCode?: string;
 }
 
-export interface CheckoutSuccess {
+export interface CheckoutSuccessRequest {
   sessionId: string;
 }
 
@@ -133,47 +133,67 @@ export interface ApiError {
   message: string;
 }
 
-// Form types
-export interface FormErrors {
-  [key: string]: string;
+// UI Component types
+export interface ButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  type?: 'button' | 'submit' | 'reset';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
+  size?: 'sm' | 'md' | 'lg';
+  disabled?: boolean;
+  loading?: boolean;
+  className?: string;
 }
 
-// Filter and search types
+export interface InputProps {
+  label?: string;
+  type?: string;
+  placeholder?: string;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
+  disabled?: boolean;
+  required?: boolean;
+  className?: string;
+}
+
+export interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  children: React.ReactNode;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+}
+
+// Filter and Search types
 export interface ProductFilters {
   category?: string;
   minPrice?: number;
   maxPrice?: number;
+  sortBy?: 'price' | 'name' | 'ratings' | 'sold';
+  sortOrder?: 'asc' | 'desc';
   search?: string;
-  sort?: 'price' | 'name' | 'created' | 'rating';
-  order?: 'asc' | 'desc';
   page?: number;
   limit?: number;
 }
 
-// Component props types
-export interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-  title?: string;
+// Context types
+export interface AuthContextType {
+  user: User | null;
+  isLoading: boolean;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  signup: (credentials: SignupCredentials) => Promise<void>;
+  logout: () => void;
+  refreshToken: () => Promise<void>;
 }
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'outline';
-  size?: 'sm' | 'md' | 'lg';
-  loading?: boolean;
-  fullWidth?: boolean;
-}
-
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-  helperText?: string;
-}
-
-export interface CardProps {
-  children: React.ReactNode;
-  className?: string;
-  hover?: boolean;
-  padding?: 'none' | 'sm' | 'md' | 'lg';
+export interface CartContextType {
+  cart: CartItem[];
+  isLoading: boolean;
+  addToCart: (productId: string, quantity?: number) => Promise<void>;
+  updateQuantity: (productId: string, quantity: number) => Promise<void>;
+  removeFromCart: (productId: string) => Promise<void>;
+  clearCart: () => Promise<void>;
+  getCartTotal: () => number;
+  getCartItemsCount: () => number;
 }
